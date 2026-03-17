@@ -217,11 +217,46 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 @keyframes ti{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 /* PAGES */
 .page{display:none}.page.active{display:block}
+/* MOBILE BOTTOM NAV */
+.mobnav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--navy-mid);border-top:1px solid var(--border);z-index:150;align-items:stretch}
+.mni{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:1;cursor:pointer;color:var(--muted);font-size:10px;font-weight:500;position:relative;transition:color .15s;border:none;background:none;padding:4px 2px}
+.mni.active{color:var(--gold)}.mni .mico{font-size:20px;line-height:1.2}
+.mnbdg{position:absolute;top:4px;right:calc(50% - 16px);background:var(--gold);color:var(--navy);font-size:9px;font-weight:700;padding:1px 4px;border-radius:20px;min-width:14px;text-align:center;line-height:1.4}
+.mobptitle{font-size:13px;font-weight:600;color:var(--white);position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;pointer-events:none}
 /* RESPONSIVE */
 @media(max-width:1100px){.split{grid-template-columns:1fr 300px}}
 @media(max-width:900px){.split{grid-template-columns:1fr}.dp,.ddp{position:static}}
-@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.mobt{display:flex}.main{margin-left:0;padding:14px;padding-top:68px}.sg{grid-template-columns:1fr 1fr}.mg{grid-template-columns:1fr}.ph{flex-direction:column;align-items:flex-start}.pacts{width:100%}.pacts .btn{flex:1;justify-content:center}}
-@media(max-width:480px){.sg{grid-template-columns:1fr 1fr}.tabs{width:100%;overflow-x:auto}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .mobt{display:flex}
+  .mobnav{display:flex}
+  .main{margin-left:0;padding:12px;padding-top:66px;padding-bottom:72px;max-width:100%;overflow-x:hidden}
+  .sg{grid-template-columns:1fr 1fr}
+  .mg{grid-template-columns:1fr}
+  .ph{flex-direction:column;align-items:flex-start}
+  .pacts{width:100%;flex-wrap:wrap}
+  .pacts .btn{flex:1;justify-content:center;min-width:0;padding:8px 10px}
+  .split{gap:12px}
+  .panel{margin-bottom:12px}
+  .phd{flex-direction:column;align-items:flex-start}
+  .pacts2{width:100%}
+  .sw{width:100%}
+  .tabs{overflow-x:auto;flex-wrap:nowrap;width:100%;-webkit-overflow-scrolling:touch}
+  .tab{flex-shrink:0}
+  .calday{min-height:48px}
+  .calgw{padding:8px 10px 12px}
+  .scv{font-size:24px}
+  .dp,.ddp{max-width:100%}
+}
+@media(max-width:480px){
+  .sg{grid-template-columns:1fr 1fr}
+  .sc{padding:14px 12px}
+  .scv{font-size:22px}
+  .calday{min-height:40px}
+  .caldn{font-size:10px}
+  .calev{font-size:8px;padding:1px 3px}
+  .calmore{font-size:8px}
+}
 </style>
 </head>
 <body>
@@ -256,8 +291,16 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       <div class="sbu"><div class="uav">AS</div><div><div class="uname">Anson Smith</div><div class="urole">Administrator</div></div><button class="lout" onclick="doLogout()" title="Sign out">⎋</button></div>
     </div>
   </aside>
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobnav">
+    <button class="mni active" id="mn-dashboard" onclick="nav('dashboard',this)"><span class="mico">⚡</span><span>Home</span></button>
+    <button class="mni" id="mn-bookings" onclick="nav('bookings',this)"><span class="mico">📋</span><span>Bookings</span><span class="mnbdg" id="mpb">3</span></button>
+    <button class="mni" id="mn-contacts" onclick="nav('contacts',this)"><span class="mico">✉️</span><span>Leads</span><span class="mnbdg" id="mnlb">5</span></button>
+    <button class="mni" id="mn-calendar" onclick="nav('calendar',this)"><span class="mico">🗓</span><span>Calendar</span></button>
+  </nav>
   <div class="mobt">
     <div class="mobl"><div class="mobm">A</div>Armvet</div>
+    <span class="mobptitle" id="mobptitle">Dashboard</span>
     <button class="hb" onclick="openSB()">☰</button>
   </div>
   <main class="main">
@@ -353,9 +396,6 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
       <div class="ph">
         <div><div class="ptitle">Calendar</div><div class="psub" id="calsub">View &amp; manage scheduled consultations</div></div>
         <div class="pacts">
-          <button class="btn bg bsm" onclick="calShift(-1)">‹ Prev</button>
-          <button class="btn bg bsm" onclick="calToday()">Today</button>
-          <button class="btn bg bsm" onclick="calShift(1)">Next ›</button>
           <button class="btn bp bsm" onclick="openBkModal()">+ Booking</button>
         </div>
       </div>
@@ -450,25 +490,43 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementB
 function doLogout(){document.getElementById('app').style.display='none';document.getElementById('ls').style.display='flex';closeSB()}
 
 // NAV
+const PGTITLES={dashboard:'Dashboard',bookings:'Bookings',contacts:'Leads',calendar:'Calendar'};
 function nav(pg,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+pg).classList.add('active');
+  // Sidebar nav
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
-  if(el)el.classList.add('active');
+  if(el&&el.classList.contains('ni'))el.classList.add('active');
+  else{const ni=document.querySelector('.ni[onclick*="\''+pg+'\'"]');if(ni)ni.classList.add('active')}
+  // Mobile bottom nav
+  document.querySelectorAll('.mni').forEach(n=>n.classList.remove('active'));
+  const mni=document.getElementById('mn-'+pg);if(mni)mni.classList.add('active');
+  // Mobile header title
+  const mpt=document.getElementById('mobptitle');if(mpt)mpt.textContent=PGTITLES[pg]||pg;
   closeSB();
   if(pg==='bookings')rBkTbl();
   if(pg==='contacts')rLdTbl();
-  if(pg==='calendar')rCal();
+  if(pg==='calendar'){
+    if(!selDay){const t=new Date();calY=t.getFullYear();calM=t.getMonth();selDay={y:calY,m:calM,d:t.getDate()}}
+    rCal();rDayDetail(selDay.d);
+  }
   if(pg==='dashboard')rDash();
 }
 function openSB(){document.getElementById('sidebar').classList.add('open');document.getElementById('sbo').style.display='block'}
 function closeSB(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sbo').style.display='none'}
 
 // INIT
-function init(){updBadges();rDash();rBkTbl();rLdTbl();rCal();rMiniCal()}
+function init(){
+  const t=new Date();calY=t.getFullYear();calM=t.getMonth();
+  updBadges();rDash();rBkTbl();rLdTbl();rMiniCal();
+}
 function updBadges(){
-  document.getElementById('pb').textContent=bookings.filter(b=>b.st==='pending').length;
-  document.getElementById('nlb').textContent=leads.filter(l=>l.sc==='new').length;
+  const pb=bookings.filter(b=>b.st==='pending').length;
+  const nlb=leads.filter(l=>l.sc==='new').length;
+  document.getElementById('pb').textContent=pb;
+  document.getElementById('nlb').textContent=nlb;
+  const mpb=document.getElementById('mpb');if(mpb)mpb.textContent=pb;
+  const mnlb=document.getElementById('mnlb');if(mnlb)mnlb.textContent=nlb;
 }
 
 // HELPERS
@@ -545,7 +603,7 @@ function fBk(f,el){bkF=f;document.querySelectorAll('#bkt .tab').forEach(t=>t.cla
 function sBk(v){bkS=v;rBkTbl()}
 function appBk(id){
   const b=bookings.find(x=>x.id===id);if(!b)return;
-  b.st='confirmed';rBkTbl();if(selBk===id)showBkDp(id);updBadges();rDash();rCal();
+  b.st='confirmed';rBkTbl();if(selBk===id)showBkDp(id);updBadges();rDash();if(document.getElementById('calgrid').innerHTML)rCal();
   toast(`Booking confirmed — ${b.fn} ${b.ln}`,'success');
 }
 function showBkDp(id){
@@ -553,7 +611,9 @@ function showBkDp(id){
   document.querySelectorAll('#bktbl tr').forEach(r=>r.classList.remove('sel'));
   const row=document.getElementById('bkr'+id);if(row)row.classList.add('sel');
   const b=bookings.find(x=>x.id===id);if(!b)return;
-  document.getElementById('bkdp').innerHTML=`
+  const bkdpEl=document.getElementById('bkdp');
+  if(window.innerWidth<=900)setTimeout(()=>bkdpEl.scrollIntoView({behavior:'smooth',block:'start'}),60);
+  bkdpEl.innerHTML=`
     <div class="dphero">
       <div class="dpname">${b.fn} ${b.ln}</div>
       <div class="dporg">${b.org}</div>
@@ -588,7 +648,7 @@ function showBkDp(id){
 }
 function updBkSt(id,st){
   const b=bookings.find(x=>x.id===id);if(!b)return;
-  b.st=st;rBkTbl();showBkDp(id);updBadges();rDash();rCal();
+  b.st=st;rBkTbl();showBkDp(id);updBadges();rDash();if(document.getElementById('calgrid').innerHTML)rCal();
   toast('Status → '+cap(st),'success');
 }
 function addToCal(id){
@@ -619,7 +679,7 @@ function saveBk(){
   const d={fn,ln,em:document.getElementById('bem').value,ph:document.getElementById('bph').value,org:document.getElementById('borg').value,cat:document.getElementById('bcat').value,st:document.getElementById('bst').value,date:document.getElementById('bdate').value,time:document.getElementById('btime').value,notes:document.getElementById('bnotes').value};
   if(editBkId){const i=bookings.findIndex(x=>x.id===editBkId);bookings[i]={...bookings[i],...d};toast('Booking updated','success');showBkDp(editBkId)}
   else{bookings.unshift({id:Date.now(),...d});toast(`Booking created for ${fn} ${ln}`,'success')}
-  closeMov('bkmov');rBkTbl();updBadges();rDash();rCal();
+  closeMov('bkmov');rBkTbl();updBadges();rDash();if(document.getElementById('calgrid').innerHTML)rCal();
 }
 
 // LEADS TABLE
@@ -642,7 +702,9 @@ function showLdDp(id){
   document.querySelectorAll('#ldtbl tr').forEach(r=>r.classList.remove('sel'));
   const row=document.getElementById('ldr'+id);if(row)row.classList.add('sel');
   const l=leads.find(x=>x.id===id);if(!l)return;
-  document.getElementById('lddp').innerHTML=`
+  const lddpEl=document.getElementById('lddp');
+  if(window.innerWidth<=900)setTimeout(()=>lddpEl.scrollIntoView({behavior:'smooth',block:'start'}),60);
+  lddpEl.innerHTML=`
     <div class="dphero">
       <div class="dpname">${l.fn} ${l.ln}</div>
       <div class="dporg">${l.org}</div>
