@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armvet LLC — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --navy-mid: #152638;
+    --navy-light: #1e3a52;
+    --gold: #c9a84c;
+    --gold-light: #e2c07a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --white: #f5f3ee;
+    --muted: #8a9bb0;
+    --border: rgba(255,255,255,0.07);
+    --green: #3daa6e;
+    --red: #d95f5f;
+    --amber: #d48b2e;
+    --blue: #4a8fb5;
+    --sidebar-w: 240px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--navy);
+    padding: 20px;
+  }
+
+  .login-bg {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 30% 60%, rgba(201,168,76,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(74,143,181,0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .login-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .login-logo-mark {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+
+  .login-logo-text h2 {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .login-logo-text span {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .login-heading {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .form-group input {
+    width: 100%;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus { border-color: var(--gold); }
+
+  .login-btn {
+    width: 100%;
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .login-btn:hover { background: var(--gold-light); }
+  .login-btn:active { transform: scale(0.99); }
+
+  .login-hint {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .login-hint code {
+    background: var(--navy);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--gold);
+  }
+
+  .login-error {
+    background: rgba(217,95,95,0.15);
+    border: 1px solid rgba(217,95,95,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e88;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ── APP SHELL ── */
+  #app { display: none; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--navy-mid);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-logo-mark {
+    width: 34px; height: 34px;
+    background: var(--gold);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+  }
+
+  .sidebar-logo-text {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 14px; font-weight: 700;
+    line-height: 1.2;
+    color: var(--white);
+  }
+
+  .sidebar-logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+
+  .sidebar-nav {
+    padding: 16px 12px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 8px 6px;
+    margin-top: 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 400;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+    text-decoration: none;
+    user-select: none;
+  }
+
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+
+  .nav-item.active {
+    background: var(--gold-dim);
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 20px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .sidebar-user:hover { background: rgba(255,255,255,0.05); }
+
+  .user-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--navy-light), var(--gold-dim));
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--white); }
+  .user-role { font-size: 11px; color: var(--muted); }
+
+  .logout-btn {
+    background: none; border: none;
+    color: var(--muted); font-size: 16px;
+    cursor: pointer; padding: 4px;
+    transition: color 0.15s;
+  }
+  .logout-btn:hover { color: var(--red); }
+
+  /* ── MOBILE TOPBAR ── */
+  .mobile-topbar {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 200;
+  }
+
+  .mobile-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px; font-weight: 700;
+  }
+
+  .mobile-logo-mark {
+    width: 28px; height: 28px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    color: var(--navy);
+  }
+
+  .hamburger {
+    background: none; border: none;
+    color: var(--white); font-size: 22px;
+    cursor: pointer; padding: 4px;
+  }
+
+  .sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 99;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    padding: 28px;
+    min-height: 100vh;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 24px; font-weight: 700;
+  }
+
+  .page-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .btn-primary { background: var(--gold); color: var(--navy); }
+  .btn-primary:hover { background: var(--gold-light); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--white);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: var(--muted); }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  .btn-danger { background: rgba(217,95,95,0.15); color: #e88; border: 1px solid rgba(217,95,95,0.2); }
+  .btn-danger:hover { background: rgba(217,95,95,0.25); }
+
+  .btn-success { background: rgba(61,170,110,0.15); color: #5de0a0; border: 1px solid rgba(61,170,110,0.2); }
+  .btn-success:hover { background: rgba(61,170,110,0.25); }
+
+  /* ── STATS CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.red::before { background: var(--red); }
+  .stat-card.amber::before { background: var(--amber); }
+
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; font-weight: 500; }
+  .stat-value { font-family: 'Libre Baskerville', serif; font-size: 32px; margin: 8px 0 4px; }
+  .stat-delta { font-size: 12px; color: var(--muted); }
+  .stat-delta.up { color: var(--green); }
+  .stat-delta.down { color: var(--red); }
+
+  .stat-icon {
+    position: absolute;
+    right: 16px; top: 16px;
+    font-size: 24px;
+    opacity: 0.15;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .panel-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .panel-title {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 15px; font-weight: 700;
+  }
+
+  .panel-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .panel-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── FILTER TABS ── */
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 3px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .filter-tab.active { background: var(--navy-mid); color: var(--white); }
+  .filter-tab:hover:not(.active) { color: var(--white); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+
+  .badge-pending { background: rgba(212,139,46,0.15); color: #e8a840; }
+  .badge-confirmed { background: rgba(61,170,110,0.15); color: #5de0a0; }
+  .badge-completed { background: rgba(74,143,181,0.15); color: #7bbdda; }
+  .badge-cancelled { background: rgba(217,95,95,0.15); color: #e88; }
+  .badge-new { background: rgba(201,168,76,0.15); color: var(--gold-light); }
+  .badge-hot { background: rgba(217,95,95,0.15); color: #e88; }
+  .badge-warm { background: rgba(212,139,46,0.15); color: #e8a840; }
+  .badge-cold { background: rgba(138,155,176,0.12); color: var(--muted); }
+  .badge-closed { background: rgba(61,170,110,0.15); color: #5de0a0; }
+
+  /* ── CATEGORY CHIP ── */
+  .cat-chip {
+    display: inline-flex;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+
+  .cat-executive { color: var(--gold); border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.07); }
+  .cat-federal { color: var(--blue); border-color: rgba(74,143,181,0.3); background: rgba(74,143,181,0.07); }
+  .cat-speaking { color: #b47de8; border-color: rgba(180,125,232,0.3); background: rgba(180,125,232,0.07); }
+  .cat-culture { color: var(--green); border-color: rgba(61,170,110,0.3); background: rgba(61,170,110,0.07); }
+  .cat-general { color: var(--muted); border-color: var(--border); background: rgba(138,155,176,0.07); }
+
+  /* ── ACTIONS CELL ── */
+  .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── SEARCH BAR ── */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .search-bar input {
+    background: none; border: none;
+    color: var(--white); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; flex: 1; min-width: 0;
+  }
+
+  .search-bar input::placeholder { color: var(--muted); }
+  .search-icon { color: var(--muted); font-size: 14px; }
+
+  /* ── CALENDAR ── */
+  .calendar-wrap {
+    padding: 16px;
+    background: var(--navy);
+    border-radius: 8px;
+  }
+
+  .cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .cal-title { font-family: 'Libre Baskerville', serif; font-size: 15px; }
+
+  .cal-nav {
+    display: flex; gap: 6px;
+  }
+
+  .cal-nav button {
+    background: var(--navy-mid); border: 1px solid var(--border);
+    color: var(--white); border-radius: 6px;
+    width: 30px; height: 30px; cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .cal-nav button:hover { background: rgba(255,255,255,0.08); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+
+  .cal-dow {
+    text-align: center; font-size: 10px; font-weight: 600;
+    color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 0;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+    padding: 2px;
+    gap: 2px;
+  }
+
+  .cal-day:hover { background: rgba(255,255,255,0.06); }
+  .cal-day.today { background: var(--gold-dim); color: var(--gold); font-weight: 600; }
+  .cal-day.has-event .dot { display: block; }
+  .cal-day.other-month { opacity: 0.3; }
+  .cal-day.selected { background: var(--gold); color: var(--navy); font-weight: 600; }
+
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); display: none; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.2s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .modal-title { font-family: 'Libre Baskerville', serif; font-size: 16px; }
+  .modal-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; }
+  .modal-close:hover { color: var(--white); }
+
+  .modal-body { padding: 24px; }
+
+  .modal-field { margin-bottom: 18px; }
+  .modal-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+  .modal-field input, .modal-field select, .modal-field textarea {
+    width: 100%;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal-field select option { background: var(--navy-mid); }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--gold); }
+  .modal-field textarea { resize: vertical; min-height: 80px; }
+
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 10px;
+  }
+
+  /* ── DETAIL ROW ── */
+  .detail-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .detail-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; width: 100px; flex-shrink: 0; margin-top: 2px; }
+  .detail-value { font-size: 13px; flex: 1; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    z-index: 2000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .toast {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: toastIn 0.3s ease;
+    max-width: 300px;
+  }
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--gold); }
+
+  @keyframes toastIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── DASHBOARD GRID ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* ── ACTIVITY ── */
+  .activity-item {
+    display: flex; gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 5px;
+  }
+
+  .activity-text { font-size: 13px; line-height: 1.5; flex: 1; }
+  .activity-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .mobile-topbar { display: flex; }
+    .main { margin-left: 0; padding: 16px; padding-top: 72px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .modal-grid { grid-template-columns: 1fr; }
+    .page-header { flex-direction: column; align-items: flex-start; }
+    .header-actions { width: 100%; }
+    .header-actions .btn { flex: 1; justify-content: center; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .filter-tabs { width: 100%; overflow-x: auto; }
+    .filter-tab { padding: 6px 10px; font-size: 11px; }
+    td, th { padding: 10px 12px; }
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238a9bb0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-mark">A</div>
+      <div class="login-logo-text">
+        <h2>Armvet LLC</h2>
+        <span>Admin Portal</span>
+      </div>
+    </div>
+    <div class="login-heading">Welcome back</div>
+    <p class="login-sub">Sign in to manage bookings & leads</p>
+    <div class="login-error" id="login-error">Invalid credentials. Please try again.</div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="admin@armvet.com" value="admin@armvet.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" value="Armvet2024!">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-hint">Demo: <code>admin@armvet.com</code> / <code>Armvet2024!</code></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">A</div>
+      <div>
+        <div class="sidebar-logo-text">Armvet LLC</div>
+        <div class="sidebar-logo-sub">Admin Dashboard</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <div class="nav-item active" onclick="navigate('dashboard', this)">
+        <span class="icon">⚡</span> Dashboard
+      </div>
+
+      <div class="nav-section-label">Inbound</div>
+      <div class="nav-item" onclick="navigate('bookings', this)">
+        <span class="icon">📅</span> Bookings
+        <span class="nav-badge" id="pending-badge">3</span>
+      </div>
+      <div class="nav-item" onclick="navigate('contacts', this)">
+        <span class="icon">✉️</span> Contact Leads
+        <span class="nav-badge" id="new-leads-badge">5</span>
+      </div>
+      <div class="nav-item" onclick="navigate('calendar', this)">
+        <span class="icon">🗓</span> Calendar
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar">AS</div>
+        <div class="user-info">
+          <div class="user-name">Anson Smith</div>
+          <div class="user-role">Administrator</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Sign out">⎋</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Topbar -->
+  <div class="mobile-topbar">
+    <div class="mobile-logo">
+      <div class="mobile-logo-mark">A</div>
+      Armvet
+    </div>
+    <button class="hamburger" onclick="openSidebar()">☰</button>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-subtitle">Good morning, Anson — here's what's happening</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" onclick="navigate('bookings', null); openBookingModal()">+ New Booking</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card gold">
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Total Bookings</div>
+          <div class="stat-value">24</div>
+          <div class="stat-delta up">↑ 4 this month</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✓</div>
+          <div class="stat-label">Confirmed</div>
+          <div class="stat-value">9</div>
+          <div class="stat-delta up">↑ 2 this week</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-label">Pending Review</div>
+          <div class="stat-value">3</div>
+          <div class="stat-delta">Needs attention</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">✉️</div>
+          <div class="stat-label">Contact Leads</div>
+          <div class="stat-value">18</div>
+          <div class="stat-delta up">↑ 5 new</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-label">Hot Leads</div>
+          <div class="stat-value">4</div>
+          <div class="stat-delta">Follow up today</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">Recent Bookings</div>
+                <div class="panel-subtitle">Latest consultation requests</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('bookings', null)">View all →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Service</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Brig. Gen. Marcus Webb (Ret.)</strong><br><small style="color:var(--muted)">DoD Acquisition Office</small></td>
+                    <td><span class="cat-chip cat-federal">Federal HR</span></td>
+                    <td>Mar 20, 2026</td>
+                    <td><span class="badge badge-pending">Pending</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Dr. Renée Holloway</strong><br><small style="color:var(--muted)">NASA Goddard Center</small></td>
+                    <td><span class="cat-chip cat-executive">Executive</span></td>
+                    <td>Mar 22, 2026</td>
+                    <td><span class="badge badge-confirmed">Confirmed</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Col. James Tatum (Ret.)</strong><br><small style="color:var(--muted)">Army War College</small></td>
+                    <td><span class="cat-chip cat-speaking">Speaking</span></td>
+                    <td>Mar 25, 2026</td>
+                    <td><span class="badge badge-pending">Pending</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Kendra Vasquez</strong><br><small style="color:var(--muted)">Lockheed Martin</small></td>
+                    <td><span class="cat-chip cat-culture">Culture</span></td>
+                    <td>Mar 28, 2026</td>
+                    <td><span class="badge badge-confirmed">Confirmed</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">Hot Leads</div>
+                <div class="panel-subtitle">Contact form submissions requiring follow-up</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('contacts', null)">View all →</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Lead</th>
+                    <th>Received</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Lt. Col. Sandra Pierce</strong><br><small style="color:var(--muted)">sandrapierce@army.mil</small></td>
+                    <td><span class="cat-chip cat-federal">Federal HR</span></td>
+                    <td><span class="badge badge-hot">Hot</span></td>
+                    <td>Today, 9:14am</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Thomas Okonkwo</strong><br><small style="color:var(--muted)">thomas.ok@deloitte.com</small></td>
+                    <td><span class="cat-chip cat-executive">Executive</span></td>
+                    <td><span class="badge badge-hot">Hot</span></td>
+                    <td>Today, 11:32am</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Maj. Dana Ellison</strong><br><small style="color:var(--muted)">dana.ellison@tradoc.mil</small></td>
+                    <td><span class="cat-chip cat-speaking">Speaking</span></td>
+                    <td><span class="badge badge-hot">Hot</span></td>
+                    <td>Mar 16, 3:55pm</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel" style="margin-bottom:20px">
+            <div class="panel-header">
+              <div class="panel-title">March 2026</div>
+              <div class="cal-nav">
+                <button>‹</button>
+                <button>›</button>
+              </div>
+            </div>
+            <div style="padding:16px">
+              <div class="cal-grid">
+                <div class="cal-dow">Su</div><div class="cal-dow">Mo</div><div class="cal-dow">Tu</div><div class="cal-dow">We</div><div class="cal-dow">Th</div><div class="cal-dow">Fr</div><div class="cal-dow">Sa</div>
+              </div>
+              <div class="cal-grid" id="mini-cal"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">Recent Activity</div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--green)"></div>
+              <div>
+                <div class="activity-text">Booking confirmed for <strong>Dr. Renée Holloway</strong></div>
+                <div class="activity-time">Today, 10:02am</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--gold)"></div>
+              <div>
+                <div class="activity-text">New contact lead from <strong>Thomas Okonkwo</strong></div>
+                <div class="activity-time">Today, 11:32am</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--red)"></div>
+              <div>
+                <div class="activity-text">Hot lead flagged: <strong>Lt. Col. Sandra Pierce</strong></div>
+                <div class="activity-time">Today, 9:14am</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--blue)"></div>
+              <div>
+                <div class="activity-text">Booking added to calendar for <strong>Kendra Vasquez</strong></div>
+                <div class="activity-time">Mar 16, 4:15pm</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot" style="background:var(--amber)"></div>
+              <div>
+                <div class="activity-text">New booking request from <strong>Col. James Tatum</strong></div>
+                <div class="activity-time">Mar 16, 2:08pm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOOKINGS PAGE ── -->
+    <div class="page" id="page-bookings">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Bookings</div>
+          <div class="page-subtitle">Manage consultation requests</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="openBookingModal()">+ Add Booking</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="filter-tabs" id="booking-filter-tabs">
+            <button class="filter-tab active" onclick="filterBookings('all', this)">All <span style="opacity:0.6">(12)</span></button>
+            <button class="filter-tab" onclick="filterBookings('pending', this)">Pending <span style="opacity:0.6">(3)</span></button>
+            <button class="filter-tab" onclick="filterBookings('confirmed', this)">Confirmed <span style="opacity:0.6">(6)</span></button>
+            <button class="filter-tab" onclick="filterBookings('completed', this)">Completed <span style="opacity:0.6">(2)</span></button>
+            <button class="filter-tab" onclick="filterBookings('cancelled', this)">Cancelled <span style="opacity:0.6">(1)</span></button>
+          </div>
+          <div class="panel-actions">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Search bookings..." oninput="searchBookings(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Service</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Category</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-table">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONTACTS PAGE ── -->
+    <div class="page" id="page-contacts">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Contact Leads</div>
+          <div class="page-subtitle">Inbound inquiries from the contact form</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportLeads()">↓ Export CSV</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="filter-tabs" id="leads-filter-tabs">
+            <button class="filter-tab active" onclick="filterLeads('all', this)">All <span style="opacity:0.6">(18)</span></button>
+            <button class="filter-tab" onclick="filterLeads('new', this)">New <span style="opacity:0.6">(5)</span></button>
+            <button class="filter-tab" onclick="filterLeads('hot', this)">🔥 Hot <span style="opacity:0.6">(4)</span></button>
+            <button class="filter-tab" onclick="filterLeads('warm', this)">Warm <span style="opacity:0.6">(6)</span></button>
+            <button class="filter-tab" onclick="filterLeads('cold', this)">Cold <span style="opacity:0.6">(2)</span></button>
+            <button class="filter-tab" onclick="filterLeads('closed', this)">Closed <span style="opacity:0.6">(1)</span></button>
+          </div>
+          <div class="panel-actions">
+            <div class="search-bar">
+              <span class="search-icon">🔍</span>
+              <input type="text" placeholder="Search leads..." oninput="searchLeads(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Contact</th>
+                <th>Organization</th>
+                <th>Category</th>
+                <th>Lead Score</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leads-table">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CALENDAR PAGE ── -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Calendar</div>
+          <div class="page-subtitle">Scheduled consultations — March 2026</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary btn-sm" onclick="navigate('bookings', null); openBookingModal()">+ New Booking</button>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="cal-header" style="flex:1">
+              <div class="cal-title">March 2026</div>
+              <div class="cal-nav">
+                <button>‹ Prev</button>
+                <button>Next ›</button>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 16px 20px">
+            <div class="cal-grid" style="margin-bottom:8px">
+              <div class="cal-dow">Sun</div><div class="cal-dow">Mon</div><div class="cal-dow">Tue</div><div class="cal-dow">Wed</div><div class="cal-dow">Thu</div><div class="cal-dow">Fri</div><div class="cal-dow">Sat</div>
+            </div>
+            <div class="cal-grid" id="full-cal" style="gap:6px"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="panel-title">Upcoming Events</div>
+                <div class="panel-subtitle">Next 14 days</div>
+              </div>
+            </div>
+            <div id="upcoming-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="booking-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="booking-modal-title">New Booking</div>
+      <button class="modal-close" onclick="closeModal('booking-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label>First Name</label>
+          <input type="text" id="b-fname" placeholder="Marcus">
+        </div>
+        <div class="modal-field">
+          <label>Last Name</label>
+          <input type="text" id="b-lname" placeholder="Webb">
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label>Email</label>
+          <input type="email" id="b-email" placeholder="client@org.gov">
+        </div>
+        <div class="modal-field">
+          <label>Phone</label>
+          <input type="tel" id="b-phone" placeholder="(540) 000-0000">
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Organization</label>
+        <input type="text" id="b-org" placeholder="Department / Agency / Company">
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label>Service Category</label>
+          <select id="b-category">
+            <option value="executive">Executive Coaching</option>
+            <option value="federal">Federal HR Consulting</option>
+            <option value="culture">Culture Training</option>
+            <option value="speaking">Speaking Engagement</option>
+            <option value="general">General Inquiry</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Status</label>
+          <select id="b-status">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label>Date</label>
+          <input type="date" id="b-date">
+        </div>
+        <div class="modal-field">
+          <label>Time</label>
+          <input type="time" id="b-time">
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Notes</label>
+        <textarea id="b-notes" placeholder="Any relevant context..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('booking-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBooking()">Save Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD DETAIL MODAL -->
+<div class="modal-overlay" id="lead-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Lead Details</div>
+      <button class="modal-close" onclick="closeModal('lead-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="lead-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('lead-modal')">Close</button>
+      <button class="btn btn-success btn-sm" onclick="convertToBooking()">Convert to Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Booking Details</div>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="detail-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('detail-modal')">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="closeModal('detail-modal')">Add to Calendar ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ── DATA ──
+const bookings = [
+  { id: 1, fname:'Marcus', lname:'Webb', email:'m.webb@dod.gov', phone:'(703) 555-0101', org:'DoD Acquisition Office', category:'federal', status:'pending', date:'2026-03-20', time:'10:00', notes:'Interested in Federal HR Modernization and workforce planning.' },
+  { id: 2, fname:'Renée', lname:'Holloway', email:'r.holloway@nasa.gov', phone:'(301) 555-0142', org:'NASA Goddard Center', category:'executive', status:'confirmed', date:'2026-03-22', time:'14:00', notes:'Referred by former colleague. Looking for 1-on-1 executive coaching.' },
+  { id: 3, fname:'James', lname:'Tatum', email:'jtatum@armywarcollege.edu', phone:'(717) 555-0118', org:'Army War College', category:'speaking', status:'pending', date:'2026-03-25', time:'09:00', notes:'PME keynote for senior officer class, April cohort.' },
+  { id: 4, fname:'Kendra', lname:'Vasquez', email:'k.vasquez@lm.com', phone:'(301) 555-0177', org:'Lockheed Martin', category:'culture', status:'confirmed', date:'2026-03-28', time:'13:30', notes:'Culture transformation program for 200-person engineering team.' },
+  { id: 5, fname:'David', lname:'Nguyen', email:'d.nguyen@va.gov', phone:'(202) 555-0133', org:'Veterans Affairs HQ', category:'federal', status:'confirmed', date:'2026-04-02', time:'11:00', notes:'Talent acquisition strategy for healthcare workforce.' },
+  { id: 6, fname:'Patricia', lname:'Monroe', email:'pmonroe@boozallen.com', phone:'(703) 555-0199', org:'Booz Allen Hamilton', category:'executive', status:'completed', date:'2026-03-10', time:'15:00', notes:'Leadership gap analysis and 90-day development roadmap.' },
+  { id: 7, fname:'Raymond', lname:'Chen', email:'rchen@tradoc.mil', phone:'(757) 555-0121', org:'TRADOC', category:'speaking', status:'completed', date:'2026-03-05', time:'08:30', notes:'DEI seminar for DEOMI participants.' },
+  { id: 8, fname:'Michelle', lname:'Parker', email:'mparker@opm.gov', phone:'(202) 555-0165', org:'Office of Personnel Mgmt', category:'federal', status:'confirmed', date:'2026-04-08', time:'10:30', notes:'HR modernization feasibility assessment.' },
+  { id: 9, fname:'Carlos', lname:'Estrada', email:'cestrada@amsec.com', phone:'(703) 555-0144', org:'AMSEC LLC', category:'culture', status:'confirmed', date:'2026-04-10', time:'14:00', notes:'Follow-on from initial workshop.' },
+  { id: 10, fname:'Linda', lname:'Braxton', email:'lbraxton@deloitte.com', phone:'(703) 555-0188', org:'Deloitte Federal', category:'executive', status:'pending', date:'2026-03-19', time:'09:30', notes:'Senior partner coaching program evaluation.' },
+  { id: 11, fname:'Erik', lname:'Johansson', email:'e.johansson@nro.gov', phone:'(571) 555-0102', org:'National Reconnaissance Office', category:'federal', status:'confirmed', date:'2026-04-15', time:'13:00', notes:'Workforce planning for classified programs division.' },
+  { id: 12, fname:'Tonya', lname:'Reid', email:'treid@pentagon.mil', phone:'(703) 555-0156', org:'Pentagon / OUSD(P)', category:'speaking', status:'cancelled', date:'2026-03-12', time:'10:00', notes:'Event rescheduled — to follow up.' },
+];
+
+const leads = [
+  { id: 1, fname:'Sandra', lname:'Pierce', email:'sandrapierce@army.mil', phone:'(571) 555-0201', org:'U.S. Army Signal Corps', category:'federal', score:'hot', date:'2026-03-17', time:'09:14', message:'We are restructuring our entire G-1 function and need an outside HR consultant with federal experience. Budget approved, timeline is Q2. Please reach out ASAP.' },
+  { id: 2, fname:'Thomas', lname:'Okonkwo', email:'thomas.ok@deloitte.com', phone:'(703) 555-0212', org:'Deloitte Consulting', category:'executive', score:'hot', date:'2026-03-17', time:'11:32', message:'Looking for an executive coach for our federal practice leadership team. 6-month engagement. Can we schedule a call this week?' },
+  { id: 3, fname:'Dana', lname:'Ellison', email:'dana.ellison@tradoc.mil', phone:'(757) 555-0223', org:'TRADOC Command', category:'speaking', score:'hot', date:'2026-03-16', time:'15:55', message:'We need a keynote for our Leader Development Summit in May. ~300 senior NCOs and officers. Budget is available.' },
+  { id: 4, fname:'Wei', lname:'Zhang', email:'wzhang@gsa.gov', phone:'(202) 555-0234', org:'General Services Administration', category:'federal', score:'hot', date:'2026-03-15', time:'10:20', message:'GSA HR transformation initiative. Looking for a consultant with direct federal HR director experience.' },
+  { id: 5, fname:'Priya', lname:'Mathur', email:'pmathur@mitre.org', phone:'(703) 555-0245', org:'MITRE Corporation', category:'culture', score:'warm', date:'2026-03-14', time:'13:45', message:'We are building a new leadership development curriculum and want to talk through a custom workshop.' },
+  { id: 6, fname:'Anthony', lname:'Brooks', email:'abrooks@l3technologies.com', phone:'(214) 555-0256', org:'L3 Technologies', category:'executive', score:'warm', date:'2026-03-13', time:'09:00', message:'Interested in small group workshops for our emerging leaders program.' },
+  { id: 7, fname:'Julia', lname:'Kessler', email:'julia.k@disa.mil', phone:'(703) 555-0267', org:'DISA', category:'federal', score:'warm', date:'2026-03-12', time:'14:30', message:'Need workforce planning support for a major org restructure.' },
+  { id: 8, fname:'Marcus', lname:'Osei', email:'mosei@sba.gov', phone:'(202) 555-0278', org:'SBA Office of Veterans', category:'general', score:'warm', date:'2026-03-11', time:'11:15', message:'Interested in your services for veteran-focused leadership programs.' },
+  { id: 9, fname:'Carolyn', lname:'Diaz', email:'cdiaz@ngc.com', phone:'(703) 555-0289', org:'Northrop Grumman', category:'culture', score:'warm', date:'2026-03-10', time:'16:00', message:'Culture training for 3 divisions post-merger. Would like to discuss scope.' },
+  { id: 10, fname:'Robert', lname:'Finley', email:'rfinley@army.mil', phone:'(540) 555-0290', org:'FORSCOM', category:'speaking', score:'warm', date:'2026-03-09', time:'08:45', message:'Interested in a leadership seminar for brigade commanders.' },
+  { id: 11, fname:'Grace', lname:'Yamamoto', email:'gyamamoto@nih.gov', phone:'(301) 555-0211', org:'National Institutes of Health', category:'federal', score:'new', date:'2026-03-17', time:'08:30', message:'Just stumbled upon your site. Curious about HR modernization services for a federal research agency.' },
+  { id: 12, fname:'Harold', lname:'Simmons', email:'hsimmons@usmc.mil', phone:'(703) 555-0222', org:'Marine Corps HQ', category:'speaking', score:'new', date:'2026-03-17', time:'10:00', message:'Looking for a speaker for our Senior Leader Symposium this summer.' },
+  { id: 13, fname:'Angela', lname:'Foster', email:'afoster@accenture.com', phone:'(571) 555-0233', org:'Accenture Federal', category:'executive', score:'new', date:'2026-03-16', time:'12:00', message:'We have several senior managers who could benefit from executive coaching.' },
+  { id: 14, fname:'Kevin', lname:'Marsh', email:'kmarsh@dia.mil', phone:'(571) 555-0244', org:'Defense Intelligence Agency', category:'federal', score:'new', date:'2026-03-15', time:'17:00', message:'Exploring talent acquisition strategy options.' },
+  { id: 15, fname:'Vanessa', lname:'Ortiz', email:'vortiz@boozallen.com', phone:'(703) 555-0255', org:'Booz Allen Hamilton', category:'culture', score:'new', date:'2026-03-14', time:'09:30', message:'Interested in organizational culture training for a new federal program office.' },
+  { id: 16, fname:'Leon', lname:'Hart', email:'lhart@raytheon.com', phone:'(571) 555-0266', org:'Raytheon Technologies', category:'general', score:'cold', date:'2026-03-01', time:'14:00', message:'General inquiry about your services. Not sure if it is the right fit.' },
+  { id: 17, fname:'Diane', lname:'Kolb', email:'dkolb@treasury.gov', phone:'(202) 555-0277', org:'U.S. Treasury', category:'federal', score:'cold', date:'2026-02-28', time:'10:30', message:'No budget currently but wanted to connect for future consideration.' },
+  { id: 18, fname:'Kenneth', lname:'Oluwole', email:'k.oluwole@deloitte.com', phone:'(703) 555-0288', org:'Deloitte Consulting', category:'executive', score:'closed', date:'2026-02-15', time:'11:00', message:'Engagement completed. Follow-up in Q3.' },
+];
+
+let currentBookingFilter = 'all';
+let currentLeadFilter = 'all';
+let currentBookingSearch = '';
+let currentLeadSearch = '';
+
+// ── LOGIN ──
+function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+
+  if (email === 'admin@armvet.com' && pass === 'Armvet2024!') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderAll();
+  } else {
+    err.style.display = 'block';
+    setTimeout(() => err.style.display = 'none', 3000);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
+});
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  closeSidebar();
+}
+
+// ── NAVIGATION ──
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) { el.classList.add('active'); }
+  else {
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.textContent.toLowerCase().includes(page)) n.classList.add('active');
+    });
+  }
+
+  closeSidebar();
+  if (page === 'bookings') renderBookings();
+  if (page === 'contacts') renderLeads();
+  if (page === 'calendar') renderFullCal();
+}
+
+// ── SIDEBAR MOBILE ──
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').style.display = 'block';
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').style.display = 'none';
+}
+
+// ── RENDER ALL ──
+function renderAll() {
+  renderMiniCal();
+  renderBookings();
+  renderLeads();
+  renderFullCal();
+  renderUpcoming();
+}
+
+// ── BADGES ──
+const badgeMap = { pending:'badge-pending', confirmed:'badge-confirmed', completed:'badge-completed', cancelled:'badge-cancelled' };
+const scoreBadge = { new:'badge-new', hot:'badge-hot', warm:'badge-warm', cold:'badge-cold', closed:'badge-closed' };
+const catClass = { executive:'cat-executive', federal:'cat-federal', speaking:'cat-speaking', culture:'cat-culture', general:'cat-general' };
+const catLabel = { executive:'Executive', federal:'Federal HR', speaking:'Speaking', culture:'Culture', general:'General' };
+
+function badge(status) { return `<span class="badge ${badgeMap[status] || ''}">${cap(status)}</span>`; }
+function scorebadge(s) { return `<span class="badge ${scoreBadge[s] || ''}">${cap(s)}</span>`; }
+function catChip(c) { return `<span class="cat-chip ${catClass[c] || ''}">${catLabel[c] || c}</span>`; }
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+
+// ── BOOKINGS ──
+function renderBookings() {
+  const tbody = document.getElementById('bookings-table');
+  let data = bookings.filter(b => {
+    const matchFilter = currentBookingFilter === 'all' || b.status === currentBookingFilter;
+    const matchSearch = !currentBookingSearch || `${b.fname} ${b.lname} ${b.org} ${b.email}`.toLowerCase().includes(currentBookingSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div><p>No bookings found</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(b => `
+    <tr>
+      <td>
+        <strong>${b.fname} ${b.lname}</strong><br>
+        <small style="color:var(--muted)">${b.org}</small>
+      </td>
+      <td>${catChip(b.category)}</td>
+      <td>
+        ${fmtDate(b.date)}<br>
+        <small style="color:var(--muted)">${fmtTime(b.time)}</small>
+      </td>
+      <td>${badge(b.status)}</td>
+      <td>
+        <select onchange="updateBookingStatus(${b.id}, this.value)" style="background:var(--navy);border:1px solid var(--border);color:var(--white);padding:5px 28px 5px 8px;border-radius:6px;font-size:12px;cursor:pointer">
+          <option value="pending" ${b.status==='pending'?'selected':''}>Pending</option>
+          <option value="confirmed" ${b.status==='confirmed'?'selected':''}>Confirmed</option>
+          <option value="completed" ${b.status==='completed'?'selected':''}>Completed</option>
+          <option value="cancelled" ${b.status==='cancelled'?'selected':''}>Cancelled</option>
+        </select>
+      </td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-ghost btn-sm" onclick="viewBooking(${b.id})">View</button>
+          ${b.status==='pending' ? `<button class="btn btn-success btn-sm" onclick="approveBooking(${b.id})">✓ Approve</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="addToCalendar(${b.id})" title="Add to calendar">📅</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterBookings(f, el) {
+  currentBookingFilter = f;
+  document.querySelectorAll('#booking-filter-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderBookings();
+}
+
+function searchBookings(v) { currentBookingSearch = v; renderBookings(); }
+
+function updateBookingStatus(id, status) {
+  const b = bookings.find(x => x.id === id);
+  if (b) { b.status = status; renderBookings(); showToast('Status updated to ' + cap(status), 'success'); }
+}
+
+function approveBooking(id) {
+  const b = bookings.find(x => x.id === id);
+  if (b) {
+    b.status = 'confirmed';
+    renderBookings();
+    showToast(`Booking confirmed for ${b.fname} ${b.lname}`, 'success');
+    document.getElementById('pending-badge').textContent = bookings.filter(x => x.status === 'pending').length;
+  }
+}
+
+function viewBooking(id) {
+  const b = bookings.find(x => x.id === id);
+  if (!b) return;
+  document.getElementById('detail-modal-body').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Client</div><div class="detail-value"><strong>${b.fname} ${b.lname}</strong></div></div>
+    <div class="detail-row"><div class="detail-label">Organization</div><div class="detail-value">${b.org}</div></div>
+    <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value"><a href="mailto:${b.email}" style="color:var(--gold)">${b.email}</a></div></div>
+    <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${b.phone}</div></div>
+    <div class="detail-row"><div class="detail-label">Service</div><div class="detail-value">${catChip(b.category)}</div></div>
+    <div class="detail-row"><div class="detail-label">Date</div><div class="detail-value">${fmtDate(b.date)} at ${fmtTime(b.time)}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badge(b.status)}</div></div>
+    <div class="detail-row"><div class="detail-label">Notes</div><div class="detail-value" style="color:var(--muted)">${b.notes || '—'}</div></div>
+  `;
+  openModal('detail-modal');
+}
+
+function addToCalendar(id) {
+  const b = bookings.find(x => x.id === id);
+  showToast(`${b.fname} ${b.lname} added to calendar`, 'info');
+}
+
+// ── ADD BOOKING ──
+let editingBookingId = null;
+
+function openBookingModal(id) {
+  editingBookingId = id || null;
+  const title = document.getElementById('booking-modal-title');
+  if (id) {
+    const b = bookings.find(x => x.id === id);
+    title.textContent = 'Edit Booking';
+    document.getElementById('b-fname').value = b.fname;
+    document.getElementById('b-lname').value = b.lname;
+    document.getElementById('b-email').value = b.email;
+    document.getElementById('b-phone').value = b.phone;
+    document.getElementById('b-org').value = b.org;
+    document.getElementById('b-category').value = b.category;
+    document.getElementById('b-status').value = b.status;
+    document.getElementById('b-date').value = b.date;
+    document.getElementById('b-time').value = b.time;
+    document.getElementById('b-notes').value = b.notes;
+  } else {
+    title.textContent = 'New Booking';
+    ['b-fname','b-lname','b-email','b-phone','b-org','b-notes'].forEach(f => document.getElementById(f).value = '');
+    document.getElementById('b-status').value = 'pending';
+    document.getElementById('b-date').value = '';
+    document.getElementById('b-time').value = '';
+  }
+  openModal('booking-modal');
+}
+
+function saveBooking() {
+  const fname = document.getElementById('b-fname').value.trim();
+  const lname = document.getElementById('b-lname').value.trim();
+  if (!fname || !lname) { showToast('Please enter client name', 'error'); return; }
+
+  const data = {
+    fname, lname,
+    email: document.getElementById('b-email').value,
+    phone: document.getElementById('b-phone').value,
+    org: document.getElementById('b-org').value,
+    category: document.getElementById('b-category').value,
+    status: document.getElementById('b-status').value,
+    date: document.getElementById('b-date').value,
+    time: document.getElementById('b-time').value,
+    notes: document.getElementById('b-notes').value,
+  };
+
+  if (editingBookingId) {
+    const idx = bookings.findIndex(x => x.id === editingBookingId);
+    bookings[idx] = { ...bookings[idx], ...data };
+    showToast('Booking updated', 'success');
+  } else {
+    bookings.unshift({ id: Date.now(), ...data });
+    showToast(`Booking created for ${fname} ${lname}`, 'success');
+  }
+
+  closeModal('booking-modal');
+  renderBookings();
+  renderUpcoming();
+  document.getElementById('pending-badge').textContent = bookings.filter(x => x.status === 'pending').length;
+}
+
+// ── LEADS ──
+function renderLeads() {
+  const tbody = document.getElementById('leads-table');
+  let data = leads.filter(l => {
+    const matchFilter = currentLeadFilter === 'all' || l.score === currentLeadFilter;
+    const matchSearch = !currentLeadSearch || `${l.fname} ${l.lname} ${l.org} ${l.email}`.toLowerCase().includes(currentLeadSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div><p>No leads found</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(l => `
+    <tr>
+      <td>
+        <strong>${l.fname} ${l.lname}</strong><br>
+        <small style="color:var(--muted)">${l.email}</small>
+      </td>
+      <td>${l.org}</td>
+      <td>${catChip(l.category)}</td>
+      <td>${scorebadge(l.score)}</td>
+      <td style="max-width:200px">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px" title="${l.message}">${l.message}</div>
+      </td>
+      <td style="white-space:nowrap">
+        ${fmtDate(l.date)}<br>
+        <small style="color:var(--muted)">${l.time}</small>
+      </td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-ghost btn-sm" onclick="viewLead(${l.id})">View</button>
+          <select onchange="updateLeadScore(${l.id}, this.value)" style="background:var(--navy);border:1px solid var(--border);color:var(--white);padding:5px 28px 5px 8px;border-radius:6px;font-size:12px;cursor:pointer">
+            <option value="new" ${l.score==='new'?'selected':''}>New</option>
+            <option value="hot" ${l.score==='hot'?'selected':''}>Hot</option>
+            <option value="warm" ${l.score==='warm'?'selected':''}>Warm</option>
+            <option value="cold" ${l.score==='cold'?'selected':''}>Cold</option>
+            <option value="closed" ${l.score==='closed'?'selected':''}>Closed</option>
+          </select>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterLeads(f, el) {
+  currentLeadFilter = f;
+  document.querySelectorAll('#leads-filter-tabs .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderLeads();
+}
+
+function searchLeads(v) { currentLeadSearch = v; renderLeads(); }
+
+function updateLeadScore(id, score) {
+  const l = leads.find(x => x.id === id);
+  if (l) { l.score = score; renderLeads(); showToast('Lead score updated to ' + cap(score), 'success'); }
+}
+
+function viewLead(id) {
+  const l = leads.find(x => x.id === id);
+  if (!l) return;
+  document.getElementById('lead-modal-body').innerHTML = `
+    <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value"><strong>${l.fname} ${l.lname}</strong></div></div>
+    <div class="detail-row"><div class="detail-label">Organization</div><div class="detail-value">${l.org}</div></div>
+    <div class="detail-row"><div class="detail-label">Email</div><div class="detail-value"><a href="mailto:${l.email}" style="color:var(--gold)">${l.email}</a></div></div>
+    <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value">${l.phone}</div></div>
+    <div class="detail-row"><div class="detail-label">Category</div><div class="detail-value">${catChip(l.category)}</div></div>
+    <div class="detail-row"><div class="detail-label">Lead Score</div><div class="detail-value">${scorebadge(l.score)}</div></div>
+    <div class="detail-row"><div class="detail-label">Received</div><div class="detail-value">${fmtDate(l.date)} at ${l.time}</div></div>
+    <div class="detail-row"><div class="detail-label">Message</div><div class="detail-value" style="color:var(--muted);line-height:1.6">${l.message}</div></div>
+  `;
+  openModal('lead-modal');
+}
+
+function convertToBooking() {
+  closeModal('lead-modal');
+  openBookingModal();
+  showToast('Fill in booking details to convert lead', 'info');
+}
+
+function exportLeads() { showToast('CSV export coming soon', 'info'); }
+
+// ── CALENDAR ──
+const eventDays = [19, 20, 22, 25, 28];
+
+function renderMiniCal() {
+  const el = document.getElementById('mini-cal');
+  if (!el) return;
+  el.innerHTML = buildCalCells(true);
+}
+
+function renderFullCal() {
+  const el = document.getElementById('full-cal');
+  if (!el) return;
+  el.innerHTML = buildCalCells(false);
+}
+
+function buildCalCells(mini) {
+  const today = 17;
+  const startDow = 0; // March 2026 starts on Sunday
+  const days = 31;
+  let cells = '';
+
+  // Prev month padding
+  for (let i = 0; i < startDow; i++) {
+    const pd = 28 - startDow + i + 1;
+    cells += `<div class="cal-day other-month"><span>${pd}</span></div>`;
+  }
+
+  // Days
+  for (let d = 1; d <= days; d++) {
+    const isToday = d === today;
+    const hasEvent = eventDays.includes(d);
+    const booksOnDay = bookings.filter(b => {
+      const dd = parseInt(b.date.split('-')[2]);
+      return dd === d && b.date.startsWith('2026-03');
+    });
+    const cls = `cal-day${isToday ? ' today' : ''}${hasEvent || booksOnDay.length ? ' has-event' : ''}`;
+
+    if (mini) {
+      cells += `<div class="${cls}"><span>${d}</span><div class="dot"></div></div>`;
+    } else {
+      const bookingDots = booksOnDay.slice(0, 2).map(b =>
+        `<div style="font-size:9px;background:var(--navy-mid);border:1px solid var(--border);border-radius:3px;padding:1px 4px;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--gold)">${b.fname[0]}. ${b.lname}</div>`
+      ).join('');
+      cells += `<div class="${cls}" style="flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:4px;min-height:60px;cursor:default">
+        <span style="font-size:12px;font-weight:${isToday?700:400};margin-bottom:3px">${d}</span>
+        ${bookingDots}
+        ${booksOnDay.length > 2 ? `<div style="font-size:9px;color:var(--muted)">+${booksOnDay.length-2} more</div>` : ''}
+      </div>`;
+    }
+  }
+
+  // Next month
+  const filled = startDow + days;
+  const remaining = filled % 7 === 0 ? 0 : 7 - (filled % 7);
+  for (let i = 1; i <= remaining; i++) {
+    cells += `<div class="cal-day other-month"><span>${i}</span></div>`;
+  }
+  return cells;
+}
+
+function renderUpcoming() {
+  const el = document.getElementById('upcoming-list');
+  if (!el) return;
+
+  const upcoming = bookings
+    .filter(b => b.date >= '2026-03-17' && b.status !== 'cancelled')
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 8);
+
+  if (upcoming.length === 0) {
+    el.innerHTML = `<div class="empty-state"><p>No upcoming events</p></div>`;
+    return;
+  }
+
+  el.innerHTML = upcoming.map(b => `
+    <div class="activity-item" style="align-items:flex-start">
+      <div style="width:38px;flex-shrink:0;text-align:center;background:var(--navy);border-radius:6px;padding:6px 4px;border:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em">${fmtMonth(b.date)}</div>
+        <div style="font-size:16px;font-weight:700;font-family:'Libre Baskerville',serif;color:${b.status==='confirmed'?'var(--gold)':'var(--white)'}">${b.date.split('-')[2]}</div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${b.fname} ${b.lname}</div>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0">${b.org} · ${fmtTime(b.time)}</div>
+        <div style="display:flex;gap:6px;margin-top:4px">${catChip(b.category)} ${badge(b.status)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── HELPERS ──
+function fmtDate(d) {
+  if (!d) return '—';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const [y, m, day] = d.split('-');
+  return `${months[parseInt(m)-1]} ${parseInt(day)}, ${y}`;
+}
+function fmtMonth(d) {
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  return months[parseInt(d.split('-')[1])-1];
+}
+function fmtTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':');
+  const hr = parseInt(h);
+  return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+}
+
+// ── MODALS ──
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ── TOAST ──
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+</script>
+</body>
+</html>
