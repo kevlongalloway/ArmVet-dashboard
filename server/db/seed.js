@@ -1,4 +1,5 @@
 const { pool } = require('./index');
+const bcrypt = require('bcryptjs');
 
 const bookings = [
   { name: 'COL Marcus Webb', email: 'marcus.webb@army.mil', phone: '(703) 555-0142', org: '101st Airborne Division', service: 'Leadership Development', category: 'Military', date: '2026-03-22', time: '09:00', status: 'pending', message: 'Looking to develop a comprehensive leadership program for transitioning NCOs.' },
@@ -28,6 +29,20 @@ const events = [
 
 async function seed() {
   try {
+    // Create admin user from env vars
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      throw new Error('ADMIN_PASSWORD environment variable is required to seed the database');
+    }
+    const hash = await bcrypt.hash(adminPassword, 10);
+    await pool.query('DELETE FROM users');
+    await pool.query(
+      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+      [adminUsername, hash, 'admin']
+    );
+    console.log(`Admin user "${adminUsername}" created`);
+
     // Clear existing data
     await pool.query('DELETE FROM events');
     await pool.query('DELETE FROM contacts');

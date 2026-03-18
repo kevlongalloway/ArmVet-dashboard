@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const { pool } = require('../db');
 const { generateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -12,25 +13,24 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Username and password required' });
   }
 
-  const adminUser = process.env.ADMIN_USERNAME;
-  const adminHash = process.env.ADMIN_PASSWORD_HASH;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
-  if (!adminUser || !adminHash) {
-    console.error('ADMIN_USERNAME or ADMIN_PASSWORD_HASH not set in environment');
-    return res.status(500).json({ error: 'Server authentication not configured' });
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken({ username: user.username, role: user.role });
+    res.json({ token, username: user.username, role: user.role });
+  } catch (err) {
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: 'Login failed' });
   }
-
-  if (username !== adminUser) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  const valid = await bcrypt.compare(password, adminHash);
-  if (!valid) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  const token = generateToken({ username, role: 'admin' });
-  res.json({ token, username, role: 'admin' });
 });
 
 // POST /api/auth/verify - Check if token is still valid

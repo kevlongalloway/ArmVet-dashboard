@@ -98,11 +98,39 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
+// Ensure admin user exists with current env password (hash on startup)
+async function ensureAdminUser() {
+  const bcrypt = require('bcryptjs');
+  const { pool } = require('./db');
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!username || !password) {
+    console.warn('ADMIN_USERNAME or ADMIN_PASSWORD not set — skipping admin user sync');
+    return;
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+  const existing = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+
+  if (existing.rows.length > 0) {
+    await pool.query('UPDATE users SET password_hash = $1 WHERE username = $2', [hash, username]);
+    console.log(`Admin user "${username}" password synced from environment`);
+  } else {
+    await pool.query(
+      'INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3)',
+      [username, hash, 'admin']
+    );
+    console.log(`Admin user "${username}" created`);
+  }
+}
+
 // Start server
 async function start() {
   try {
     await initDB();
     console.log('Connected to PostgreSQL');
+    await ensureAdminUser();
 
     app.listen(PORT, () => {
       console.log(`ArmVet Dashboard API running on port ${PORT}`);
