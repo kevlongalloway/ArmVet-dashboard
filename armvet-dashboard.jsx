@@ -343,6 +343,32 @@ const Icons = {
       <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
   ),
+  clockPending: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  checkCircle: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
+  mailInbox: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-6l-2 3H10l-2-3H2" />
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  usersAll: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
 };
 
 // ─── Styles ───
@@ -350,33 +376,35 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
 
 :root {
-  --bg-primary: #0C0F14;
-  --bg-secondary: #141820;
-  --bg-card: #1A1F2B;
-  --bg-card-hover: #1F2537;
-  --bg-input: #141820;
-  --border: #262D3D;
-  --border-light: #1E2433;
-  --text-primary: #F0F2F5;
-  --text-secondary: #8A94A6;
-  --text-muted: #5A6478;
+  --bg-primary: #07090E;
+  --bg-secondary: #0D1117;
+  --bg-card: #111720;
+  --bg-card-hover: #172030;
+  --bg-input: #0D1117;
+  --border: #1C2B3C;
+  --border-light: #152030;
+  --text-primary: #ECF0F7;
+  --text-secondary: #7A8FA8;
+  --text-muted: #435270;
   --accent: #C8A84E;
-  --accent-dim: rgba(200, 168, 78, 0.12);
-  --accent-glow: rgba(200, 168, 78, 0.25);
+  --accent-hover: #D4B860;
+  --accent-dim: rgba(200, 168, 78, 0.1);
+  --accent-glow: rgba(200, 168, 78, 0.2);
   --green: #34D399;
-  --green-dim: rgba(52, 211, 153, 0.12);
+  --green-dim: rgba(52, 211, 153, 0.1);
   --red: #F87171;
-  --red-dim: rgba(248, 113, 113, 0.12);
+  --red-dim: rgba(248, 113, 113, 0.1);
   --blue: #60A5FA;
-  --blue-dim: rgba(96, 165, 250, 0.12);
+  --blue-dim: rgba(96, 165, 250, 0.1);
   --orange: #FBBF24;
-  --orange-dim: rgba(251, 191, 36, 0.12);
+  --orange-dim: rgba(251, 191, 36, 0.1);
   --purple: #A78BFA;
-  --purple-dim: rgba(167, 139, 250, 0.12);
+  --purple-dim: rgba(167, 139, 250, 0.1);
   --radius: 10px;
   --radius-lg: 14px;
-  --shadow: 0 2px 12px rgba(0,0,0,0.3);
-  --transition: 0.2s ease;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
+  --transition: 0.18s ease;
 }
 
 * {
@@ -424,12 +452,21 @@ button, a, [role="button"] {
 .login-page::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(ellipse at 30% 20%, rgba(200,168,78,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 80%, rgba(200,168,78,0.03) 0%, transparent 50%);
+  top: -30%;
+  left: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(200,168,78,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.login-page::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(96,165,250,0.04) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -463,11 +500,28 @@ button, a, [role="button"] {
   font-weight: 600;
 }
 
+.login-logo-mark {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--accent), #9A7A2E);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #07090E;
+  margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(200,168,78,0.3);
+}
+
 .login-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 32px;
+  padding: 36px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 .login-card h2 {
@@ -522,40 +576,48 @@ button, a, [role="button"] {
 .btn-primary {
   width: 100%;
   padding: 13px;
-  background: var(--accent);
-  color: #0C0F14;
+  background: linear-gradient(135deg, var(--accent), #B8941E);
+  color: #07090E;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 9px;
+  font-size: 13px;
   font-weight: 700;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: all var(--transition);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  box-shadow: 0 4px 16px rgba(200,168,78,0.25);
 }
 
 .btn-primary:hover {
-  background: #D4B65E;
-  box-shadow: 0 4px 20px var(--accent-glow);
+  background: linear-gradient(135deg, var(--accent-hover), #C8A030);
+  box-shadow: 0 6px 24px rgba(200,168,78,0.4);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
-  padding: 8px 16px;
+  padding: 7px 15px;
   background: transparent;
   color: var(--text-secondary);
   border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: all var(--transition);
+  white-space: nowrap;
 }
 
 .btn-secondary:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
+  border-color: rgba(200,168,78,0.4);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .btn-action {
@@ -576,19 +638,19 @@ button, a, [role="button"] {
   background: var(--green-dim);
   color: var(--green);
 }
-.btn-approve:hover { background: rgba(52, 211, 153, 0.2); }
+.btn-approve:hover { background: rgba(52, 211, 153, 0.2); transform: translateY(-1px); }
 
 .btn-decline {
   background: var(--red-dim);
   color: var(--red);
 }
-.btn-decline:hover { background: rgba(248, 113, 113, 0.2); }
+.btn-decline:hover { background: rgba(248, 113, 113, 0.2); transform: translateY(-1px); }
 
 .btn-calendar {
   background: var(--blue-dim);
   color: var(--blue);
 }
-.btn-calendar:hover { background: rgba(96, 165, 250, 0.2); }
+.btn-calendar:hover { background: rgba(96, 165, 250, 0.2); transform: translateY(-1px); }
 
 .login-error {
   background: var(--red-dim);
@@ -623,10 +685,9 @@ button, a, [role="button"] {
 }
 
 .sidebar {
-  width: 240px;
+  width: 256px;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
-  padding: 24px 0;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -638,72 +699,167 @@ button, a, [role="button"] {
   transition: transform 0.3s ease;
 }
 
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo-mark {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--accent), #9A7A2E);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #07090E;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(200,168,78,0.3);
+}
+
 .sidebar-logo {
-  padding: 0 24px;
-  margin-bottom: 8px;
+  padding: 0;
+  margin-bottom: 0;
 }
 
 .sidebar-logo h1 {
   font-family: 'Syne', sans-serif;
   font-weight: 800;
-  font-size: 20px;
-  letter-spacing: 2px;
+  font-size: 17px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
+  color: var(--text-primary);
+  line-height: 1.1;
 }
 
 .sidebar-logo p {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--accent);
-  letter-spacing: 3px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
   font-weight: 600;
   margin-top: 2px;
 }
 
-.sidebar-label {
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(200,168,78,0.18), rgba(200,168,78,0.06));
+  border: 1px solid rgba(200,168,78,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sidebar-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-role {
   font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.sidebar-user-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(52,211,153,0.6);
+}
+
+.sidebar-label {
+  font-size: 9px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 2px;
-  padding: 20px 24px 8px;
+  padding: 14px 18px 6px;
 }
 
 .sidebar-nav {
   flex: 1;
+  padding: 4px 0;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 24px;
-  font-size: 14px;
+  gap: 10px;
+  padding: 9px 12px 9px 14px;
+  margin: 1px 8px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all var(--transition);
-  border-left: 3px solid transparent;
+  border-radius: 9px;
   position: relative;
   touch-action: manipulation;
 }
 
 .nav-item:hover {
   color: var(--text-primary);
-  background: rgba(255,255,255,0.03);
+  background: rgba(255,255,255,0.04);
 }
 
 .nav-item.active {
   color: var(--accent);
   background: var(--accent-dim);
-  border-left-color: var(--accent);
+}
+
+.nav-item-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.nav-item.active .nav-item-icon {
+  background: rgba(200,168,78,0.15);
 }
 
 .nav-badge {
-  position: absolute;
-  right: 20px;
+  margin-left: auto;
   background: var(--accent);
-  color: #0C0F14;
+  color: #07090E;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
@@ -713,7 +869,7 @@ button, a, [role="button"] {
 }
 
 .sidebar-footer {
-  padding: 16px 24px;
+  padding: 12px 14px;
   border-top: 1px solid var(--border);
 }
 
@@ -724,19 +880,21 @@ button, a, [role="button"] {
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: color var(--transition);
+  transition: all var(--transition);
   background: none;
   border: none;
   font-family: inherit;
-  padding: 0;
+  padding: 8px 6px;
+  width: 100%;
+  border-radius: 8px;
 }
 
-.logout-btn:hover { color: var(--red); }
+.logout-btn:hover { color: var(--red); background: var(--red-dim); }
 
 .main-content {
   flex: 1;
-  margin-left: 240px;
-  padding: 28px;
+  margin-left: 256px;
+  padding: 32px;
   min-height: 100vh;
   min-height: 100dvh;
   min-width: 0;
@@ -777,7 +935,8 @@ button, a, [role="button"] {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(2px);
   z-index: 99;
 }
 
@@ -798,6 +957,63 @@ button, a, [role="button"] {
   margin-top: 4px;
 }
 
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ─── Welcome Banner ─── */
+.welcome-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.welcome-text h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.welcome-text p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.welcome-date-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.welcome-date-day {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.welcome-date-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
 /* ─── Stats Row ─── */
 .stats-grid {
   display: grid;
@@ -809,13 +1025,34 @@ button, a, [role="button"] {
 .stat-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 20px;
-  transition: border-color var(--transition);
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05) 50%, transparent);
 }
 
 .stat-card:hover {
-  border-color: var(--border-light);
+  border-color: rgba(200,168,78,0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.stat-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .stat-label {
@@ -824,19 +1061,29 @@ button, a, [role="button"] {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
-  margin-bottom: 8px;
+}
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .stat-value {
   font-family: 'Syne', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 6px;
 }
 
 .stat-sub {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* ─── Card List ─── */
@@ -854,6 +1101,20 @@ button, a, [role="button"] {
   font-weight: 700;
 }
 
+.section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 22px;
+}
+
 .filters {
   display: flex;
   gap: 8px;
@@ -861,14 +1122,14 @@ button, a, [role="button"] {
 }
 
 .filter-chip {
-  padding: 6px 14px;
+  padding: 5px 13px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   border: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-family: 'DM Sans', sans-serif;
   transition: all var(--transition);
   white-space: nowrap;
@@ -876,11 +1137,12 @@ button, a, [role="button"] {
 
 .filter-chip:hover {
   border-color: var(--text-secondary);
+  color: var(--text-secondary);
 }
 
 .filter-chip.active {
   background: var(--accent-dim);
-  border-color: var(--accent);
+  border-color: rgba(200,168,78,0.5);
   color: var(--accent);
 }
 
@@ -894,19 +1156,52 @@ button, a, [role="button"] {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px 20px;
+  padding: 13px 16px;
   cursor: pointer;
   transition: all var(--transition);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   touch-action: manipulation;
 }
 
 .list-card:hover {
   background: var(--bg-card-hover);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-dim);
+  border-color: rgba(200,168,78,0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+.card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.card-avatar-military {
+  background: rgba(52,211,153,0.1);
+  color: var(--green);
+  border: 1px solid rgba(52,211,153,0.18);
+}
+
+.card-avatar-federal {
+  background: rgba(96,165,250,0.1);
+  color: var(--blue);
+  border: 1px solid rgba(96,165,250,0.18);
+}
+
+.card-avatar-corporate {
+  background: rgba(167,139,250,0.1);
+  color: var(--purple);
+  border: 1px solid rgba(167,139,250,0.18);
 }
 
 .card-status-dot {
@@ -1003,18 +1298,24 @@ button, a, [role="button"] {
   align-items: center;
   gap: 6px;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
   margin-bottom: 20px;
-  background: none;
-  border: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
   font-family: inherit;
-  padding: 0;
-  transition: color var(--transition);
+  padding: 7px 14px;
+  transition: all var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.detail-back:hover { color: var(--accent); }
+.detail-back:hover {
+  border-color: rgba(200,168,78,0.4);
+  color: var(--accent);
+}
 
 .detail-card {
   background: var(--bg-card);
@@ -1095,7 +1396,11 @@ button, a, [role="button"] {
 .detail-message p {
   font-size: 14px;
   color: var(--text-secondary);
-  line-height: 1.7;
+  line-height: 1.75;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
 }
 
 .detail-actions {
@@ -1335,17 +1640,18 @@ button, a, [role="button"] {
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--bg-input);
+  gap: 10px;
+  background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 10px;
+  padding: 10px 16px;
   margin-bottom: 16px;
-  transition: border-color var(--transition);
+  transition: all var(--transition);
 }
 
 .search-bar:focus-within {
-  border-color: var(--accent);
+  border-color: rgba(200,168,78,0.4);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 .search-bar input {
@@ -1839,7 +2145,7 @@ button, a, [role="button"] {
   }
   .sidebar.open {
     transform: translateX(0);
-    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    box-shadow: 8px 0 32px rgba(0,0,0,0.6);
   }
   .sidebar-overlay.show {
     display: block;
@@ -1851,6 +2157,8 @@ button, a, [role="button"] {
     margin-left: 0;
     padding: 72px 16px 24px;
   }
+  .welcome-date-box { display: none; }
+  .welcome-banner { margin-bottom: 20px; }
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
@@ -1979,11 +2287,22 @@ function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose }) {
     <>
       <div className={`sidebar-overlay ${isOpen ? "show" : ""}`} onClick={onClose} />
       <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-        <div className="sidebar-logo">
-          <h1>Armvet</h1>
-          <p>Admin Portal</p>
+        <div className="sidebar-brand">
+          <div className="sidebar-logo-mark">A</div>
+          <div className="sidebar-logo">
+            <h1>Armvet</h1>
+            <p>Admin Portal</p>
+          </div>
         </div>
-        <div className="sidebar-label">Manage</div>
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar">AD</div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">Admin</div>
+            <div className="sidebar-user-role">Portal Administrator</div>
+          </div>
+          <div className="sidebar-user-status" title="Online" />
+        </div>
+        <div className="sidebar-label">Navigation</div>
         <nav className="sidebar-nav">
           {[
             { id: "dashboard", icon: Icons.dashboard, label: "Dashboard" },
@@ -1996,7 +2315,7 @@ function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose }) {
               className={`nav-item ${page === item.id ? "active" : ""}`}
               onClick={() => { setPage(item.id); onClose(); }}
             >
-              {item.icon}
+              <div className="nav-item-icon">{item.icon}</div>
               {item.label}
               {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
             </div>
@@ -2013,10 +2332,17 @@ function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose }) {
   );
 }
 
-function StatCard({ label, value, sub, color }) {
+function StatCard({ label, value, sub, color, icon }) {
   return (
     <div className="stat-card">
-      <div className="stat-label">{label}</div>
+      <div className="stat-top-row">
+        <div className="stat-label">{label}</div>
+        {icon && (
+          <div className="stat-icon" style={{ background: color ? `${color}18` : "rgba(255,255,255,0.05)", color: color || "var(--text-muted)" }}>
+            {icon}
+          </div>
+        )}
+      </div>
       <div className="stat-value" style={color ? { color } : {}}>
         {value}
       </div>
@@ -2086,17 +2412,23 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
 
   return (
     <div>
-      <div className="page-header">
-        <h2>Dashboard</h2>
-        <p>Overview of bookings, inquiries, and upcoming events</p>
+      <div className="welcome-banner">
+        <div className="welcome-text">
+          <h2>Good morning, Admin</h2>
+          <p>Here's what's happening with your business today.</p>
+        </div>
+        <div className="welcome-date-box">
+          <div className="welcome-date-day">Mar 17</div>
+          <div className="welcome-date-label">Wednesday, 2026</div>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="stats-grid">
-        <StatCard label="Pending Bookings" value={pending.length} sub="Need your review" color="var(--orange)" />
-        <StatCard label="Approved" value={approved.length} sub="Confirmed consultations" color="var(--green)" />
-        <StatCard label="New Messages" value={newContacts.length} sub="Unread inquiries" color="var(--blue)" />
-        <StatCard label="Total Leads" value={bookings.length + contacts.length} sub="All time" />
+        <StatCard label="Pending Bookings" value={pending.length} sub="Need your review" color="var(--orange)" icon={Icons.clockPending} />
+        <StatCard label="Approved" value={approved.length} sub="Confirmed consultations" color="var(--green)" icon={Icons.checkCircle} />
+        <StatCard label="New Messages" value={newContacts.length} sub="Unread inquiries" color="var(--blue)" icon={Icons.mailInbox} />
+        <StatCard label="Total Leads" value={bookings.length + contacts.length} sub="All time" color="var(--text-secondary)" icon={Icons.usersAll} />
       </div>
 
       {/* Today's event reminder banner — clickable, navigates to the first today event */}
@@ -2274,7 +2606,7 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
           <div className="card-list">
             {pending.slice(0, 3).map((b) => (
               <div key={b.id} className="list-card" onClick={() => { setSelectedBooking(b.id); setPage("booking-detail"); }}>
-                <div className="card-status-dot" style={{ background: statusColor(b.status) }} />
+                <div className={`card-avatar card-avatar-${b.category.toLowerCase()}`}>{b.name.charAt(0)}</div>
                 <div className="card-body">
                   <div className="card-top-row">
                     <span className="card-name">{b.name}</span>
@@ -2305,7 +2637,7 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
           <div className="card-list">
             {newContacts.slice(0, 3).map((c) => (
               <div key={c.id} className="list-card" onClick={() => { setSelectedContact(c.id); setPage("contact-detail"); }}>
-                <div className="card-status-dot" style={{ background: statusColor(c.status) }} />
+                <div className={`card-avatar card-avatar-${c.category.toLowerCase()}`}>{c.name.charAt(0)}</div>
                 <div className="card-body">
                   <div className="card-top-row">
                     <span className="card-name">{c.name}</span>
@@ -2338,8 +2670,13 @@ function BookingsPage({ bookings, setPage, setSelectedBooking, searchTerm, setSe
   return (
     <div>
       <div className="page-header">
-        <h2>Consultation Bookings</h2>
-        <p>Manage requests for proposals and consultation appointments</p>
+        <div className="page-header-row">
+          <div>
+            <h2>Consultation Bookings</h2>
+            <p>Manage requests for proposals and consultation appointments</p>
+          </div>
+          <span className="section-count" style={{ fontSize: 12, padding: "4px 12px" }}>{filtered.length} results</span>
+        </div>
       </div>
 
       <div className="search-bar">
@@ -2370,7 +2707,7 @@ function BookingsPage({ bookings, setPage, setSelectedBooking, searchTerm, setSe
         ) : (
           filtered.map((b) => (
             <div key={b.id} className="list-card" onClick={() => { setSelectedBooking(b.id); setPage("booking-detail"); }}>
-              <div className="card-status-dot" style={{ background: statusColor(b.status) }} />
+              <div className={`card-avatar card-avatar-${b.category.toLowerCase()}`}>{b.name.charAt(0)}</div>
               <div className="card-body">
                 <div className="card-top-row">
                   <span className="card-name">{b.name}</span>
@@ -2531,8 +2868,13 @@ function ContactsPage({ contacts, setPage, setSelectedContact, searchTerm, setSe
   return (
     <div>
       <div className="page-header">
-        <h2>Contact Inbox</h2>
-        <p>Messages from the website contact form</p>
+        <div className="page-header-row">
+          <div>
+            <h2>Contact Inbox</h2>
+            <p>Messages from the website contact form</p>
+          </div>
+          <span className="section-count" style={{ fontSize: 12, padding: "4px 12px" }}>{filtered.length} results</span>
+        </div>
       </div>
 
       <div className="search-bar">
@@ -2556,7 +2898,7 @@ function ContactsPage({ contacts, setPage, setSelectedContact, searchTerm, setSe
         ) : (
           filtered.map((c) => (
             <div key={c.id} className="list-card" onClick={() => { setSelectedContact(c.id); setPage("contact-detail"); }}>
-              <div className="card-status-dot" style={{ background: statusColor(c.status) }} />
+              <div className={`card-avatar card-avatar-${c.category.toLowerCase()}`}>{c.name.charAt(0)}</div>
               <div className="card-body">
                 <div className="card-top-row">
                   <span className="card-name">{c.name}</span>
@@ -2939,6 +3281,7 @@ function LoginScreen({ onLogin }) {
     <div className="login-page">
       <div className="login-box">
         <div className="login-logo">
+          <div className="login-logo-mark">A</div>
           <h1>Armvet</h1>
           <p>Admin Portal</p>
         </div>
