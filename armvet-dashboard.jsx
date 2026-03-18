@@ -329,6 +329,20 @@ const Icons = {
       <circle cx="4" cy="4" r="4" />
     </svg>
   ),
+  download: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  externalLink: (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  ),
 };
 
 // ─── Styles ───
@@ -1656,6 +1670,157 @@ button, a, [role="button"] {
   background: rgba(200, 168, 78, 0.18);
 }
 
+/* ─── Day Popup (mini-calendar click) ─── */
+.day-popup {
+  background: var(--bg-card);
+  border: 1px solid var(--accent-glow);
+  border-radius: var(--radius);
+  margin-bottom: 28px;
+  overflow: hidden;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.day-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-dim);
+}
+
+.day-popup-header-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-popup-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 4px;
+  font-family: inherit;
+  touch-action: manipulation;
+  border-radius: 4px;
+  transition: color var(--transition);
+}
+.day-popup-close:hover { color: var(--text-primary); }
+
+.day-popup-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+.day-popup-event:last-child { border-bottom: none; }
+
+.day-popup-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.day-popup-event-info { flex: 1; min-width: 0; }
+
+.day-popup-event-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.day-popup-event-title:hover { color: var(--accent); }
+
+.day-popup-event-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.day-popup-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Calendar Action Buttons ─── */
+.btn-gcal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.btn-gcal:hover { background: #1558d6; }
+
+.btn-ics {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-ics:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* Mini-cal clickable days */
+.mini-cal-day.has-event { cursor: pointer; }
+.mini-cal-day.has-event:hover:not(.today):not(.selected-day) {
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+}
+.mini-cal-day.selected-day:not(.today) {
+  background: var(--accent-dim);
+  border-radius: 6px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.mini-cal-day.selected-day:not(.today) .mini-cal-dot { background: var(--accent); }
+
 /* ─── Empty State ─── */
 .empty-state {
   text-align: center;
@@ -1721,6 +1886,63 @@ function statusColor(s) {
 
 function formatDate(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ─── Calendar Link Utilities ───
+function parseTime12(timeStr) {
+  const [timePart, period] = timeStr.trim().split(" ");
+  let [h, m] = timePart.split(":").map(Number);
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+  return { h, m };
+}
+
+function toCalDT(dateStr, timeStr) {
+  const { h, m } = parseTime12(timeStr);
+  const d = dateStr.replace(/-/g, "");
+  return `${d}T${String(h).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+}
+
+function toCalDTEnd(dateStr, timeStr, hours = 1) {
+  const { h, m } = parseTime12(timeStr);
+  const endH = Math.min(h + hours, 23);
+  const d = dateStr.replace(/-/g, "");
+  return `${d}T${String(endH).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+}
+
+function buildGCalUrl(title, dateStr, timeStr, description = "") {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${toCalDT(dateStr, timeStr)}/${toCalDTEnd(dateStr, timeStr)}`,
+    details: description,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadICS(title, dateStr, timeStr, description = "") {
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ArmVet Dashboard//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `DTSTART:${toCalDT(dateStr, timeStr)}`,
+    `DTEND:${toCalDTEnd(dateStr, timeStr)}`,
+    `SUMMARY:${title.replace(/[,;\\]/g, (c) => "\\" + c)}`,
+    `DESCRIPTION:${description.replace(/\n/g, "\\n").replace(/[,;\\]/g, (c) => "\\" + c)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ─── Components ───
@@ -1850,6 +2072,18 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
     ...approved.filter((b) => b.date.startsWith(marchPrefix)).map((b) => parseInt(b.date.split("-")[2])),
   ]);
 
+  // Selected day popup state
+  const [selectedCalDay, setSelectedCalDay] = useState(null);
+  const selectedDayStr = selectedCalDay
+    ? `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedCalDay).padStart(2, "0")}`
+    : null;
+  const selectedDayEntries = selectedDayStr
+    ? [
+        ...events.filter((e) => e.date === selectedDayStr).map((e) => ({ ...e, _source: "event" })),
+        ...approved.filter((b) => b.date === selectedDayStr).map((b) => ({ ...b, _source: "booking" })),
+      ]
+    : [];
+
   return (
     <div>
       <div className="page-header">
@@ -1908,10 +2142,12 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
             {calCells.map((cell, i) => {
               const isToday = !cell.other && cell.day === 17;
               const hasEvent = !cell.other && eventDays.has(cell.day);
+              const isSelected = !cell.other && selectedCalDay === cell.day;
               return (
                 <div
                   key={i}
-                  className={`mini-cal-day${cell.other ? " other-month" : ""}${isToday ? " today" : ""}${hasEvent ? " has-event" : ""}`}
+                  className={`mini-cal-day${cell.other ? " other-month" : ""}${isToday ? " today" : ""}${hasEvent ? " has-event" : ""}${isSelected ? " selected-day" : ""}`}
+                  onClick={hasEvent ? () => setSelectedCalDay(isSelected ? null : cell.day) : undefined}
                 >
                   {cell.day}
                   {hasEvent && <span className="mini-cal-dot" />}
@@ -1969,6 +2205,62 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
           </div>
         </div>
       </div>
+
+      {/* Day detail popup — appears when a mini-cal day with events is clicked */}
+      {selectedCalDay && selectedDayEntries.length > 0 && (
+        <div className="day-popup">
+          <div className="day-popup-header">
+            <div className="day-popup-header-title">
+              {Icons.calendar}
+              {new Date(`${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedCalDay).padStart(2, "0")}T00:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </div>
+            <button className="day-popup-close" onClick={() => setSelectedCalDay(null)}>×</button>
+          </div>
+          {selectedDayEntries.map((entry) => {
+            const isBooking = entry._source === "booking";
+            const title = isBooking ? `${entry.service} — ${entry.name} (${entry.org})` : entry.title;
+            const description = isBooking ? (entry.message || "") : (entry.description || "");
+            const dotColor = isBooking
+              ? (entry.status === "on-calendar" ? "var(--purple)" : "var(--green)")
+              : (EVENT_TYPE_COLORS[entry.type] || "var(--blue)");
+            const typeLabel = isBooking ? "consultation" : entry.type;
+            return (
+              <div key={entry.id} className="day-popup-event">
+                <div className="day-popup-dot" style={{ background: dotColor }} />
+                <div className="day-popup-event-info">
+                  <div
+                    className="day-popup-event-title"
+                    onClick={isBooking
+                      ? () => { setSelectedBooking(entry.id); setPage("booking-detail"); }
+                      : () => onEventClick(entry.id)
+                    }
+                  >
+                    {isBooking ? `${entry.service} — ${entry.name}` : entry.title}
+                  </div>
+                  <div className="day-popup-event-meta">
+                    <span>{entry.time}</span>
+                    {isBooking && <span>· {entry.org}</span>}
+                    <span className={`event-type-badge event-type-${typeLabel}`}>{typeLabel}</span>
+                  </div>
+                  <div className="day-popup-actions">
+                    <a
+                      href={buildGCalUrl(title, entry.date, entry.time, description)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-gcal"
+                    >
+                      {Icons.externalLink} Google Calendar
+                    </a>
+                    <button className="btn-ics" onClick={() => downloadICS(title, entry.date, entry.time, description)}>
+                      {Icons.download} Download .ics
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Pending bookings needing attention */}
       {pending.length > 0 && (
@@ -2189,6 +2481,41 @@ function BookingDetail({ booking, onBack, onUpdateStatus, onAddToCalendar, addTo
             {Icons.phone} Call
           </a>
         </div>
+
+        {/* Calendar export — only show for confirmed bookings */}
+        {(booking.status === "approved" || booking.status === "on-calendar") && (
+          <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--text-muted)", marginBottom: 10 }}>
+              Add to Calendar
+            </div>
+            <div className="day-popup-actions">
+              <a
+                href={buildGCalUrl(
+                  `${booking.service} — ${booking.name} (${booking.org})`,
+                  booking.date,
+                  booking.time,
+                  booking.message || ""
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-gcal"
+              >
+                {Icons.externalLink} Google Calendar
+              </a>
+              <button
+                className="btn-ics"
+                onClick={() => downloadICS(
+                  `${booking.service} — ${booking.name} (${booking.org})`,
+                  booking.date,
+                  booking.time,
+                  booking.message || ""
+                )}
+              >
+                {Icons.download} Download .ics
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2562,9 +2889,32 @@ function EventDetail({ event, onBack }) {
         </div>
 
         {/* Description */}
-        <div className="detail-message">
+        <div className="detail-message" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
           <label>Details</label>
           <p>{event.description}</p>
+        </div>
+
+        {/* Calendar export */}
+        <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--text-muted)", marginBottom: 10 }}>
+            Add to Calendar
+          </div>
+          <div className="day-popup-actions">
+            <a
+              href={buildGCalUrl(event.title, event.date, event.time, event.description || "")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gcal"
+            >
+              {Icons.externalLink} Google Calendar
+            </a>
+            <button
+              className="btn-ics"
+              onClick={() => downloadICS(event.title, event.date, event.time, event.description || "")}
+            >
+              {Icons.download} Download .ics
+            </button>
+          </div>
         </div>
       </div>
     </div>
