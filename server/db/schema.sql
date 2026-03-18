@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS bookings (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
+  org VARCHAR(255),
+  service VARCHAR(255) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  date DATE NOT NULL,
+  time VARCHAR(20) NOT NULL,
+  status VARCHAR(20) DEFAULT 'pending',
+  message TEXT,
+  submitted_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS contacts (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(50),
+  category VARCHAR(50),
+  subject VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'new',
+  submitted_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS events (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  date DATE NOT NULL,
+  time VARCHAR(20),
+  type VARCHAR(50) DEFAULT 'internal',
+  description TEXT
+);

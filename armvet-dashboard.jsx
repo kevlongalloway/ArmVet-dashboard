@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import * as api from "./api";
 
 // ─── Dummy Data ───
 const DUMMY_BOOKINGS = [
@@ -1885,7 +1886,9 @@ function statusColor(s) {
 }
 
 function formatDate(d) {
-  return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  if (!d) return "";
+  const str = typeof d === "string" && d.length === 10 ? d + "T00:00:00" : d;
+  return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 // ─── Calendar Link Utilities ───
@@ -1971,7 +1974,7 @@ function Toast({ toasts, onEventClick, onBookingClick }) {
   );
 }
 
-function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose }) {
+function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose, onLogout }) {
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
   const newCount = contacts.filter((c) => c.status === "new").length;
 
@@ -2003,7 +2006,7 @@ function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose }) {
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button className="logout-btn" onClick={() => window.location.reload()}>
+          <button className="logout-btn" onClick={onLogout}>
             {Icons.logout}
             Sign Out
           </button>
@@ -2926,12 +2929,22 @@ function LoginScreen({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    if (username === "admin" && password === "armvet2026") {
+  const handleSubmit = async () => {
+    if (!username || !password) {
+      setError("Please enter username and password.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await api.login(username, password);
       onLogin();
-    } else {
-      setError("Invalid credentials. Please try again.");
+    } catch (err) {
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2954,10 +2967,7 @@ function LoginScreen({ onLogin }) {
             <label>Password</label>
             <input type="password" placeholder="Enter password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
           </div>
-          <button className="btn-primary" onClick={handleSubmit}>Sign In</button>
-          <div className="login-hint">
-            Demo: <code>admin</code> / <code>armvet2026</code>
-          </div>
+          <button className="btn-primary" onClick={handleSubmit} disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
         </div>
       </div>
     </div>
@@ -2966,11 +2976,12 @@ function LoginScreen({ onLogin }) {
 
 // ─── Main App ───
 export default function ArmvetDashboard() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(api.isAuthenticated());
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState("dashboard");
-  const [bookings, setBookings] = useState(DUMMY_BOOKINGS);
-  const [contacts, setContacts] = useState(DUMMY_CONTACTS);
-  const [events] = useState(UPCOMING_EVENTS);
+  const [bookings, setBookings] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [events, setEvents] = useState([]);
   const [selectedBookingId, setSelectedBooking] = useState(null);
   const [selectedContactId, setSelectedContact] = useState(null);
   const [selectedEventId, setSelectedEventId] = useState(null);
@@ -3002,13 +3013,50 @@ export default function ArmvetDashboard() {
     setPage("booking-detail");
   };
 
-  // Fire reminder toasts on login — toasts carry eventId so they're clickable
+  // Verify token on mount
   useEffect(() => {
+    if (api.isAuthenticated()) {
+      api.verifyToken().then((valid) => {
+        setLoggedIn(valid);
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch data from API when logged in
+  const loadData = useCallback(async () => {
     if (!loggedIn) return;
-    const todayStr = "2026-03-17";
-    const tomorrowStr = "2026-03-18";
-    const todayEvs = UPCOMING_EVENTS.filter((e) => e.date === todayStr);
-    const tomorrowEvs = UPCOMING_EVENTS.filter((e) => e.date === tomorrowStr);
+    try {
+      const [bookingsData, contactsData, eventsData] = await Promise.all([
+        api.fetchBookings(),
+        api.fetchContacts(),
+        api.fetchEvents(),
+      ]);
+      setBookings(bookingsData);
+      setContacts(contactsData);
+      setEvents(eventsData);
+    } catch (err) {
+      console.error("Failed to load data:", err);
+      addToast({ message: "Failed to load data from server", type: "error" });
+    }
+  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Fire reminder toasts on data load
+  useEffect(() => {
+    if (!loggedIn || events.length === 0) return;
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    const todayEvs = events.filter((e) => e.date === todayStr || (e.date && e.date.startsWith(todayStr)));
+    const tomorrowEvs = events.filter((e) => e.date === tomorrowStr || (e.date && e.date.startsWith(tomorrowStr)));
     if (todayEvs.length > 0) {
       setTimeout(() => addToast({
         message: `Today at ${todayEvs[0].time}: ${todayEvs[0].title}`,
@@ -3023,28 +3071,60 @@ export default function ArmvetDashboard() {
         eventId: tomorrowEvs[0].id,
       }), 1900);
     }
-  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [events, loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateBookingStatus = (id, status) => {
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+  const updateBookingStatus = async (id, status) => {
+    try {
+      const updated = await api.updateBookingStatus(id, status);
+      setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    } catch (err) {
+      addToast({ message: "Failed to update booking status", type: "error" });
+    }
   };
 
-  const addToCalendar = (id) => {
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "on-calendar" } : b)));
+  const addToCalendar = async (id) => {
+    try {
+      const updated = await api.updateBookingStatus(id, "on-calendar");
+      setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    } catch (err) {
+      addToast({ message: "Failed to add to calendar", type: "error" });
+    }
   };
 
-  const updateContactStatus = (id, status) => {
-    setContacts((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+  const updateContactStatus = async (id, status) => {
+    try {
+      const updated = await api.updateContactStatus(id, status);
+      setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      addToast({ message: "Failed to update contact status", type: "error" });
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setLoggedIn(false);
+    setBookings([]);
+    setContacts([]);
+    setEvents([]);
   };
 
   const selectedBooking = bookings.find((b) => b.id === selectedBookingId);
   const selectedContact = contacts.find((c) => c.id === selectedContactId);
 
+  if (loading) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <div className="login-page"><div className="login-box"><div className="login-logo"><h1>Armvet</h1><p>Loading...</p></div></div></div>
+      </>
+    );
+  }
+
   if (!loggedIn) {
     return (
       <>
         <style>{CSS}</style>
-        <LoginScreen onLogin={() => setLoggedIn(true)} />
+        <LoginScreen onLogin={() => { setLoggedIn(true); }} />
       </>
     );
   }
@@ -3076,7 +3156,7 @@ export default function ArmvetDashboard() {
           <h1>Armvet</h1>
           <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}>{Icons.menu}</button>
         </div>
-        <Sidebar page={page} setPage={setPage} bookings={bookings} contacts={contacts} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar page={page} setPage={setPage} bookings={bookings} contacts={contacts} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={handleLogout} />
         <main className="main-content">
           {content}
         </main>

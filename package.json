@@ -4,10 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:server": "node server/index.js",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server/index.js",
+    "db:seed": "node server/db/seed.js",
+    "hash-password": "node -e \"require('bcryptjs').hash(process.argv[1], 10).then(h => console.log(h))\""
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
