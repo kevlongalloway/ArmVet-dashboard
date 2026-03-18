@@ -1293,6 +1293,25 @@ button, a, [role="button"] {
 .toast-info { border-left: 3px solid var(--blue); }
 .toast-error { border-left: 3px solid var(--red); }
 
+.toast-clickable {
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.toast-clickable:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+.toast-body { flex: 1; }
+.toast-cta {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1600,6 +1619,43 @@ button, a, [role="button"] {
   flex-shrink: 0;
 }
 
+/* ─── Event Detail ─── */
+.event-detail-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.event-detail-type label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-detail-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Make the banner and upcoming-event-items with events look clickable */
+.event-banner.clickable {
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.event-banner.clickable:hover {
+  background: rgba(200, 168, 78, 0.18);
+}
+
 /* ─── Empty State ─── */
 .empty-state {
   text-align: center;
@@ -1668,16 +1724,27 @@ function formatDate(d) {
 }
 
 // ─── Components ───
-function Toast({ toasts }) {
+function Toast({ toasts, onEventClick, onBookingClick }) {
   return (
     <div className="toast-container">
-      {toasts.map((t) => (
-        <div key={t.id} className={`toast toast-${t.type || "success"}`}>
-          {t.type === "success" && <span style={{ color: "var(--green)" }}>{Icons.check}</span>}
-          {t.type === "info" && <span style={{ color: "var(--blue)" }}>{Icons.calendarPlus}</span>}
-          {t.message}
-        </div>
-      ))}
+      {toasts.map((t) => {
+        const clickable = t.eventId || t.bookingId;
+        const handleClick = clickable
+          ? () => { if (t.eventId) onEventClick?.(t.eventId); else onBookingClick?.(t.bookingId); }
+          : undefined;
+        return (
+          <div
+            key={t.id}
+            className={`toast toast-${t.type || "success"}${clickable ? " toast-clickable" : ""}`}
+            onClick={handleClick}
+          >
+            {t.type === "success" && <span style={{ color: "var(--green)" }}>{Icons.check}</span>}
+            {t.type === "info" && <span style={{ color: "var(--blue)" }}>{Icons.calendarPlus}</span>}
+            <span className="toast-body">{t.message}</span>
+            {clickable && <span className="toast-cta">View →</span>}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1736,7 +1803,7 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
-function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking, setSelectedContact }) {
+function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking, setSelectedContact, onEventClick }) {
   const todayStr = "2026-03-17";
   const tomorrowStr = "2026-03-18";
 
@@ -1798,9 +1865,12 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
         <StatCard label="Total Leads" value={bookings.length + contacts.length} sub="All time" />
       </div>
 
-      {/* Today's event reminder banner */}
+      {/* Today's event reminder banner — clickable, navigates to the first today event */}
       {(todayEvents.length > 0 || tomorrowEvents.length > 0) && (
-        <div className="event-banner">
+        <div
+          className={`event-banner${todayEvents.length > 0 ? " clickable" : ""}`}
+          onClick={todayEvents.length > 0 ? () => onEventClick(todayEvents[0].id) : undefined}
+        >
           <span className="event-banner-icon">{Icons.bell}</span>
           <div className="event-banner-content">
             <div className="event-banner-title">
@@ -1865,12 +1935,15 @@ function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking
               const monthAbbr = new Date(ev.date + "T00:00:00").toLocaleString("en-US", { month: "short" });
               const isToday = ev.date === todayStr;
               const isTomorrow = ev.date === tomorrowStr;
-              const isClickable = ev._source === "booking";
+              const isBooking = ev._source === "booking";
+              const handleItemClick = isBooking
+                ? () => { setSelectedBooking(ev.bookingId); setPage("booking-detail"); }
+                : () => onEventClick(ev.id);
               return (
                 <div
                   key={ev.id}
-                  className={`upcoming-event-item${isClickable ? " clickable" : ""}`}
-                  onClick={isClickable ? () => { setSelectedBooking(ev.bookingId); setPage("booking-detail"); } : undefined}
+                  className="upcoming-event-item clickable"
+                  onClick={handleItemClick}
                 >
                   <div className={`event-date-badge${isToday ? " today-badge" : ""}`}>
                     <span className="ev-month">{monthAbbr}</span>
@@ -2253,7 +2326,7 @@ function ContactDetail({ contact, onBack, onUpdateStatus, addToast }) {
   );
 }
 
-function CalendarPage({ bookings, events, setPage, setSelectedBooking }) {
+function CalendarPage({ bookings, events, setPage, setSelectedBooking, onEventClick }) {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date(2026, 2, 17); // March 17, 2026
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -2345,6 +2418,7 @@ function CalendarPage({ bookings, events, setPage, setSelectedBooking }) {
                       key={entry.id}
                       className="cal-event event-entry"
                       title={`${entry.title} at ${entry.time}`}
+                      onClick={() => onEventClick(entry.id)}
                     >
                       {entry.time} {entry.title.split(" ")[0]}
                     </div>
@@ -2381,8 +2455,10 @@ function CalendarPage({ bookings, events, setPage, setSelectedBooking }) {
               <div
                 key={item.id}
                 className="list-card"
-                onClick={item._kind === "booking" ? () => { setSelectedBooking(item.id); setPage("booking-detail"); } : undefined}
-                style={item._kind === "event" ? { cursor: "default" } : {}}
+                onClick={item._kind === "booking"
+                  ? () => { setSelectedBooking(item.id); setPage("booking-detail"); }
+                  : () => onEventClick(item.id)
+                }
               >
                 <div className="card-status-dot" style={{
                   background: item._kind === "event" ? "var(--blue)"
@@ -2411,6 +2487,85 @@ function CalendarPage({ bookings, events, setPage, setSelectedBooking }) {
             ))}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Event Detail ───
+const EVENT_TYPE_LABELS = {
+  consultation: "Consultation",
+  internal: "Internal Meeting",
+  call: "Discovery Call",
+  deadline: "Deadline",
+};
+
+const EVENT_TYPE_COLORS = {
+  consultation: "var(--green)",
+  internal: "var(--accent)",
+  call: "var(--blue)",
+  deadline: "var(--red)",
+};
+
+const EVENT_TYPE_DIM = {
+  consultation: "var(--green-dim)",
+  internal: "var(--accent-dim)",
+  call: "var(--blue-dim)",
+  deadline: "var(--red-dim)",
+};
+
+function EventDetail({ event, onBack }) {
+  if (!event) return null;
+
+  const typeColor = EVENT_TYPE_COLORS[event.type] || "var(--text-muted)";
+  const typeDim = EVENT_TYPE_DIM[event.type] || "rgba(255,255,255,0.06)";
+  const typeLabel = EVENT_TYPE_LABELS[event.type] || event.type;
+
+  return (
+    <div className="detail-view">
+      <button className="detail-back" onClick={onBack}>
+        {Icons.back} Back
+      </button>
+      <div className="detail-card">
+        {/* Header */}
+        <div className="detail-header">
+          <div>
+            <div className="detail-name">{event.title}</div>
+            <div className="detail-org">{formatDate(event.date)} at {event.time}</div>
+          </div>
+          <span className={`event-type-badge event-type-${event.type}`} style={{ fontSize: 11, padding: "4px 10px" }}>
+            {typeLabel}
+          </span>
+        </div>
+
+        {/* Type icon + label row */}
+        <div className="event-detail-type">
+          <div className="event-detail-icon" style={{ background: typeDim }}>
+            <span style={{ color: typeColor }}>{Icons.calendar}</span>
+          </div>
+          <div>
+            <label>Event Type</label>
+            <div style={{ fontSize: 14, color: typeColor, fontWeight: 600, marginTop: 2 }}>{typeLabel}</div>
+          </div>
+        </div>
+
+        {/* Date / time grid */}
+        <div className="detail-grid" style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "1px solid var(--border)" }}>
+          <div className="detail-field">
+            <label>Date</label>
+            <span>{formatDate(event.date)}</span>
+          </div>
+          <div className="detail-field">
+            <label>Time</label>
+            <span>{event.time}</span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="detail-message">
+          <label>Details</label>
+          <p>{event.description}</p>
+        </div>
       </div>
     </div>
   );
@@ -2468,6 +2623,8 @@ export default function ArmvetDashboard() {
   const [events] = useState(UPCOMING_EVENTS);
   const [selectedBookingId, setSelectedBooking] = useState(null);
   const [selectedContactId, setSelectedContact] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [eventReturnPage, setEventReturnPage] = useState("dashboard");
   const [toasts, setToasts] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -2478,13 +2635,24 @@ export default function ArmvetDashboard() {
   const [contactSearchTerm, setContactSearchTerm] = useState("");
   const [contactStatusFilter, setContactStatusFilter] = useState("all");
 
-  const addToast = ({ message, type = "success" }) => {
+  const addToast = ({ message, type = "success", eventId = null, bookingId = null }) => {
     const id = Date.now();
-    setToasts((t) => [...t, { id, message, type }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
+    setToasts((t) => [...t, { id, message, type, eventId, bookingId }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 5000);
   };
 
-  // Fire reminder toasts on login for today's and tomorrow's events
+  const navigateToEvent = (eventId, returnPage = "dashboard") => {
+    setSelectedEventId(eventId);
+    setEventReturnPage(returnPage);
+    setPage("event-detail");
+  };
+
+  const navigateToBooking = (bookingId) => {
+    setSelectedBooking(bookingId);
+    setPage("booking-detail");
+  };
+
+  // Fire reminder toasts on login — toasts carry eventId so they're clickable
   useEffect(() => {
     if (!loggedIn) return;
     const todayStr = "2026-03-17";
@@ -2492,10 +2660,18 @@ export default function ArmvetDashboard() {
     const todayEvs = UPCOMING_EVENTS.filter((e) => e.date === todayStr);
     const tomorrowEvs = UPCOMING_EVENTS.filter((e) => e.date === tomorrowStr);
     if (todayEvs.length > 0) {
-      setTimeout(() => addToast({ message: `Today at ${todayEvs[0].time}: ${todayEvs[0].title}`, type: "info" }), 700);
+      setTimeout(() => addToast({
+        message: `Today at ${todayEvs[0].time}: ${todayEvs[0].title}`,
+        type: "info",
+        eventId: todayEvs[0].id,
+      }), 700);
     }
     if (tomorrowEvs.length > 0) {
-      setTimeout(() => addToast({ message: `Tomorrow at ${tomorrowEvs[0].time}: ${tomorrowEvs[0].title}`, type: "info" }), 1800);
+      setTimeout(() => addToast({
+        message: `Tomorrow at ${tomorrowEvs[0].time}: ${tomorrowEvs[0].title}`,
+        type: "info",
+        eventId: tomorrowEvs[0].id,
+      }), 1900);
     }
   }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -2523,9 +2699,11 @@ export default function ArmvetDashboard() {
     );
   }
 
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+
   let content;
   if (page === "dashboard") {
-    content = <DashboardPage bookings={bookings} contacts={contacts} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} setSelectedContact={setSelectedContact} />;
+    content = <DashboardPage bookings={bookings} contacts={contacts} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} setSelectedContact={setSelectedContact} onEventClick={(id) => navigateToEvent(id, "dashboard")} />;
   } else if (page === "bookings") {
     content = <BookingsPage bookings={bookings} setPage={setPage} setSelectedBooking={setSelectedBooking} searchTerm={searchTerm} setSearchTerm={setSearchTerm} statusFilter={statusFilter} setStatusFilter={setStatusFilter} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} />;
   } else if (page === "booking-detail") {
@@ -2535,7 +2713,9 @@ export default function ArmvetDashboard() {
   } else if (page === "contact-detail") {
     content = <ContactDetail contact={selectedContact} onBack={() => setPage("contacts")} onUpdateStatus={updateContactStatus} addToast={addToast} />;
   } else if (page === "calendar") {
-    content = <CalendarPage bookings={bookings} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} />;
+    content = <CalendarPage bookings={bookings} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} onEventClick={(id) => navigateToEvent(id, "calendar")} />;
+  } else if (page === "event-detail") {
+    content = <EventDetail event={selectedEvent} onBack={() => setPage(eventReturnPage)} />;
   }
 
   return (
@@ -2550,7 +2730,11 @@ export default function ArmvetDashboard() {
         <main className="main-content">
           {content}
         </main>
-        <Toast toasts={toasts} />
+        <Toast
+          toasts={toasts}
+          onEventClick={(id) => navigateToEvent(id, page)}
+          onBookingClick={navigateToBooking}
+        />
       </div>
     </>
   );
