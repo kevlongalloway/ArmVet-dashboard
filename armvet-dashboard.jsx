@@ -135,6 +135,65 @@ const DUMMY_CONTACTS = [
   },
 ];
 
+const UPCOMING_EVENTS = [
+  {
+    id: "ev1",
+    title: "Q1 Review & Pipeline Planning",
+    date: "2026-03-17",
+    time: "11:00 AM",
+    type: "internal",
+    description: "Internal Q1 performance review and Q2 pipeline strategy session.",
+  },
+  {
+    id: "ev2",
+    title: "TRADOC Speaking Engagement",
+    date: "2026-03-18",
+    time: "9:00 AM",
+    type: "consultation",
+    description: "Keynote for TRADOC Senior Leader Development Course — 200+ attendees expected.",
+  },
+  {
+    id: "ev3",
+    title: "Col. Richardson Discovery Call",
+    date: "2026-03-20",
+    time: "10:00 AM",
+    type: "call",
+    description: "Follow-up discovery call to scope the 2-day battalion leadership workshop for Army National Guard.",
+  },
+  {
+    id: "ev4",
+    title: "NASA Executive Coaching Session",
+    date: "2026-03-22",
+    time: "2:00 PM",
+    type: "consultation",
+    description: "First coaching session with Dr. Owens and the 3 newly promoted GS-15 division chiefs.",
+  },
+  {
+    id: "ev5",
+    title: "FedScope RFI Response Deadline",
+    date: "2026-03-30",
+    time: "5:00 PM",
+    type: "deadline",
+    description: "Deadline to submit response to Jennifer Walsh's workforce planning RFI from FedScope.",
+  },
+  {
+    id: "ev6",
+    title: "DHS HR Modernization Kickoff",
+    date: "2026-04-01",
+    time: "3:00 PM",
+    type: "consultation",
+    description: "Initial scoping session with Robert Chen for DHS sub-agency HR modernization roadmap.",
+  },
+  {
+    id: "ev7",
+    title: "Army National Guard Workshop",
+    date: "2026-04-15",
+    time: "8:00 AM",
+    type: "consultation",
+    description: "2-day leadership workshop for Col. Richardson's battalion team — approx 18 attendees.",
+  },
+];
+
 const SERVICES = [
   "Leadership Development",
   "Executive Coaching",
@@ -257,6 +316,17 @@ const Icons = {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  bell: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+  dot: (
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+      <circle cx="4" cy="4" r="4" />
     </svg>
   ),
 };
@@ -1221,6 +1291,277 @@ body {
 
 .search-icon { color: var(--text-muted); flex-shrink: 0; }
 
+/* ─── Event Reminder Banner ─── */
+.event-banner {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.event-banner-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.event-banner-content { flex: 1; }
+
+.event-banner-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.event-banner-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.event-banner-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-banner-list-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Dashboard Calendar Row ─── */
+.dash-calendar-row {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+  align-items: start;
+}
+
+/* ─── Mini Calendar ─── */
+.mini-cal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.mini-cal-header {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.mini-cal-dow {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+}
+
+.mini-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  position: relative;
+  cursor: default;
+  gap: 1px;
+}
+
+.mini-cal-day.other-month {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+.mini-cal-day.today {
+  background: var(--accent);
+  color: #0C0F14;
+  font-weight: 700;
+}
+
+.mini-cal-day.has-event:not(.today) {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.mini-cal-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.mini-cal-day.today .mini-cal-dot {
+  background: rgba(12,15,20,0.6);
+}
+
+/* ─── Upcoming Events Panel ─── */
+.upcoming-events {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-events-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.upcoming-event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition);
+}
+
+.upcoming-event-item:last-child { border-bottom: none; }
+
+.upcoming-event-item.clickable { cursor: pointer; }
+.upcoming-event-item.clickable:hover { background: var(--bg-card-hover); }
+
+.event-date-badge {
+  flex-shrink: 0;
+  width: 42px;
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 4px 4px;
+}
+
+.event-date-badge .ev-month {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.event-date-badge .ev-day {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  display: block;
+}
+
+.event-date-badge.today-badge {
+  background: var(--accent-dim);
+  border-color: var(--accent-glow);
+}
+
+.event-date-badge.today-badge .ev-day { color: var(--accent); }
+
+.event-info { flex: 1; min-width: 0; }
+
+.event-info-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.event-info-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.event-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.event-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.event-type-consultation { background: var(--green-dim); color: var(--green); }
+.event-type-internal { background: var(--accent-dim); color: var(--accent); }
+.event-type-deadline { background: var(--red-dim); color: var(--red); }
+.event-type-call { background: var(--blue-dim); color: var(--blue); }
+
+.event-today-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--orange-dim);
+  color: var(--orange);
+}
+
+.event-tomorrow-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.upcoming-events-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
 /* ─── Empty State ─── */
 .empty-state {
   text-align: center;
@@ -1262,6 +1603,7 @@ body {
   .cal-grid { display: none; }
   .cal-mobile-list { display: block !important; }
   .page-header h2 { font-size: 20px; }
+  .dash-calendar-row { grid-template-columns: 1fr; }
   .toast-container {
     left: 16px;
     right: 16px;
@@ -1356,18 +1698,61 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
-function DashboardPage({ bookings, contacts, setPage, setSelectedBooking, setSelectedContact }) {
+function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking, setSelectedContact }) {
+  const todayStr = "2026-03-17";
+  const tomorrowStr = "2026-03-18";
+
   const pending = bookings.filter((b) => b.status === "pending");
   const approved = bookings.filter((b) => b.status === "approved" || b.status === "on-calendar");
   const newContacts = contacts.filter((c) => c.status === "new");
+
+  // Build combined upcoming event list (events + approved bookings), sorted by date
+  const allUpcoming = [
+    ...events.map((e) => ({ ...e, _source: "event" })),
+    ...approved.map((b) => ({
+      id: `b-${b.id}`,
+      title: `${b.service} — ${b.name}`,
+      date: b.date,
+      time: b.time,
+      type: "consultation",
+      _source: "booking",
+      bookingId: b.id,
+    })),
+  ]
+    .filter((e) => e.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+    .slice(0, 6);
+
+  const todayEvents = allUpcoming.filter((e) => e.date === todayStr);
+  const tomorrowEvents = allUpcoming.filter((e) => e.date === tomorrowStr);
+
+  // Mini-calendar for March 2026
+  const calYear = 2026, calMonth = 2; // March = index 2
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0 = Sunday for March 2026
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate(); // 31
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate(); // 28
+
+  const calCells = [];
+  for (let i = firstDay - 1; i >= 0; i--) calCells.push({ day: daysInPrev - i, other: true });
+  for (let d = 1; d <= daysInMonth; d++) calCells.push({ day: d, other: false });
+  const needed = Math.ceil(calCells.length / 7) * 7;
+  for (let i = 1; calCells.length < needed; i++) calCells.push({ day: i, other: true });
+
+  // Days in March that have events
+  const marchPrefix = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-`;
+  const eventDays = new Set([
+    ...events.filter((e) => e.date.startsWith(marchPrefix)).map((e) => parseInt(e.date.split("-")[2])),
+    ...approved.filter((b) => b.date.startsWith(marchPrefix)).map((b) => parseInt(b.date.split("-")[2])),
+  ]);
 
   return (
     <div>
       <div className="page-header">
         <h2>Dashboard</h2>
-        <p>Overview of your consultation bookings and inquiries</p>
+        <p>Overview of bookings, inquiries, and upcoming events</p>
       </div>
 
+      {/* Stats */}
       <div className="stats-grid">
         <StatCard label="Pending Bookings" value={pending.length} sub="Need your review" color="var(--orange)" />
         <StatCard label="Approved" value={approved.length} sub="Confirmed consultations" color="var(--green)" />
@@ -1375,6 +1760,106 @@ function DashboardPage({ bookings, contacts, setPage, setSelectedBooking, setSel
         <StatCard label="Total Leads" value={bookings.length + contacts.length} sub="All time" />
       </div>
 
+      {/* Today's event reminder banner */}
+      {(todayEvents.length > 0 || tomorrowEvents.length > 0) && (
+        <div className="event-banner">
+          <span className="event-banner-icon">{Icons.bell}</span>
+          <div className="event-banner-content">
+            <div className="event-banner-title">
+              {todayEvents.length > 0
+                ? `${todayEvents.length} event${todayEvents.length > 1 ? "s" : ""} scheduled for today`
+                : `Upcoming tomorrow: ${tomorrowEvents[0].title}`}
+            </div>
+            <div className="event-banner-list">
+              {todayEvents.map((ev) => (
+                <div key={ev.id} className="event-banner-list-item">
+                  <span style={{ color: "var(--accent)" }}>{Icons.dot}</span>
+                  {ev.title} <span style={{ color: "var(--text-muted)" }}>at {ev.time}</span>
+                </div>
+              ))}
+              {todayEvents.length > 0 && tomorrowEvents.length > 0 && (
+                <div className="event-banner-list-item">
+                  <span style={{ color: "var(--blue)" }}>{Icons.dot}</span>
+                  Tomorrow: {tomorrowEvents[0].title} at {tomorrowEvents[0].time}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mini calendar + upcoming events side by side */}
+      <div className="dash-calendar-row">
+        {/* Mini Calendar */}
+        <div className="mini-cal">
+          <div className="mini-cal-header">March 2026</div>
+          <div className="mini-cal-grid">
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+              <div key={d} className="mini-cal-dow">{d}</div>
+            ))}
+            {calCells.map((cell, i) => {
+              const isToday = !cell.other && cell.day === 17;
+              const hasEvent = !cell.other && eventDays.has(cell.day);
+              return (
+                <div
+                  key={i}
+                  className={`mini-cal-day${cell.other ? " other-month" : ""}${isToday ? " today" : ""}${hasEvent ? " has-event" : ""}`}
+                >
+                  {cell.day}
+                  {hasEvent && <span className="mini-cal-dot" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Upcoming Events */}
+        <div className="upcoming-events">
+          <div className="upcoming-events-header">
+            {Icons.calendar}
+            Upcoming Events
+          </div>
+          {allUpcoming.length === 0 ? (
+            <div className="empty-state"><p>No upcoming events.</p></div>
+          ) : (
+            allUpcoming.map((ev) => {
+              const [, , dayPart] = ev.date.split("-");
+              const monthAbbr = new Date(ev.date + "T00:00:00").toLocaleString("en-US", { month: "short" });
+              const isToday = ev.date === todayStr;
+              const isTomorrow = ev.date === tomorrowStr;
+              const isClickable = ev._source === "booking";
+              return (
+                <div
+                  key={ev.id}
+                  className={`upcoming-event-item${isClickable ? " clickable" : ""}`}
+                  onClick={isClickable ? () => { setSelectedBooking(ev.bookingId); setPage("booking-detail"); } : undefined}
+                >
+                  <div className={`event-date-badge${isToday ? " today-badge" : ""}`}>
+                    <span className="ev-month">{monthAbbr}</span>
+                    <span className="ev-day">{parseInt(dayPart)}</span>
+                  </div>
+                  <div className="event-info">
+                    <div className="event-info-title">{ev.title}</div>
+                    <div className="event-info-meta">
+                      <span className="event-time">{ev.time}</span>
+                      {isToday && <span className="event-today-pill">Today</span>}
+                      {isTomorrow && <span className="event-tomorrow-pill">Tomorrow</span>}
+                      <span className={`event-type-badge event-type-${ev.type}`}>{ev.type}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div className="upcoming-events-footer">
+            <button className="btn-secondary" style={{ fontSize: 12 }} onClick={() => setPage("calendar")}>
+              Open Full Calendar →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Pending bookings needing attention */}
       {pending.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <div className="section-header">
@@ -1405,6 +1890,7 @@ function DashboardPage({ bookings, contacts, setPage, setSelectedBooking, setSel
         </div>
       )}
 
+      {/* New contact inquiries */}
       {newContacts.length > 0 && (
         <div>
           <div className="section-header">
@@ -1425,6 +1911,7 @@ function DashboardPage({ bookings, contacts, setPage, setSelectedBooking, setSel
                   <div className="card-preview">{c.subject}</div>
                   <div className="card-tags">
                     <span className={`tag tag-${c.category.toLowerCase()}`}>{c.category}</span>
+                    <span className={`status-badge status-${c.status}`}>{c.status}</span>
                   </div>
                 </div>
                 <span className="card-chevron">{Icons.chevronRight}</span>
@@ -1897,6 +2384,7 @@ export default function ArmvetDashboard() {
   const [page, setPage] = useState("dashboard");
   const [bookings, setBookings] = useState(DUMMY_BOOKINGS);
   const [contacts, setContacts] = useState(DUMMY_CONTACTS);
+  const [events] = useState(UPCOMING_EVENTS);
   const [selectedBookingId, setSelectedBooking] = useState(null);
   const [selectedContactId, setSelectedContact] = useState(null);
   const [toasts, setToasts] = useState([]);
@@ -1912,8 +2400,23 @@ export default function ArmvetDashboard() {
   const addToast = ({ message, type = "success" }) => {
     const id = Date.now();
     setToasts((t) => [...t, { id, message, type }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   };
+
+  // Fire reminder toasts on login for today's and tomorrow's events
+  useEffect(() => {
+    if (!loggedIn) return;
+    const todayStr = "2026-03-17";
+    const tomorrowStr = "2026-03-18";
+    const todayEvs = UPCOMING_EVENTS.filter((e) => e.date === todayStr);
+    const tomorrowEvs = UPCOMING_EVENTS.filter((e) => e.date === tomorrowStr);
+    if (todayEvs.length > 0) {
+      setTimeout(() => addToast({ message: `Today at ${todayEvs[0].time}: ${todayEvs[0].title}`, type: "info" }), 700);
+    }
+    if (tomorrowEvs.length > 0) {
+      setTimeout(() => addToast({ message: `Tomorrow at ${tomorrowEvs[0].time}: ${tomorrowEvs[0].title}`, type: "info" }), 1800);
+    }
+  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateBookingStatus = (id, status) => {
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
@@ -1941,7 +2444,7 @@ export default function ArmvetDashboard() {
 
   let content;
   if (page === "dashboard") {
-    content = <DashboardPage bookings={bookings} contacts={contacts} setPage={setPage} setSelectedBooking={setSelectedBooking} setSelectedContact={setSelectedContact} />;
+    content = <DashboardPage bookings={bookings} contacts={contacts} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} setSelectedContact={setSelectedContact} />;
   } else if (page === "bookings") {
     content = <BookingsPage bookings={bookings} setPage={setPage} setSelectedBooking={setSelectedBooking} searchTerm={searchTerm} setSearchTerm={setSearchTerm} statusFilter={statusFilter} setStatusFilter={setStatusFilter} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} />;
   } else if (page === "booking-detail") {
