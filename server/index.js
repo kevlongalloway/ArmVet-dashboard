@@ -93,8 +93,12 @@ app.get('/api/stats', authenticateToken, async (req, res) => {
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '..', 'dist');
   app.use(express.static(distPath));
-  app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(distPath, 'index.html'));
+  // SPA fallback: serve index.html for non-API, non-file requests
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.includes('.')) {
+      return res.sendFile(path.join(distPath, 'index.html'));
+    }
+    next();
   });
 }
 
