@@ -1,0 +1,3171 @@
+import { useState, useEffect, useCallback } from "react";
+import * as api from "./api";
+
+// ─── Dummy Data ───
+const DUMMY_BOOKINGS = [
+  {
+    id: 1,
+    name: "Col. James Richardson",
+    email: "j.richardson@army.mil",
+    phone: "703-555-0142",
+    org: "Army National Guard",
+    service: "Leadership Development",
+    category: "Military",
+    date: "2026-03-20",
+    time: "10:00 AM",
+    status: "pending",
+    message: "Interested in a 2-day leadership workshop for our battalion leadership team (approx 18 people). Looking at Q2 timeframe.",
+    submittedAt: "2026-03-15",
+  },
+  {
+    id: 2,
+    name: "Dr. Patricia Owens",
+    email: "p.owens@nasa.gov",
+    phone: "202-555-0198",
+    org: "NASA Goddard",
+    service: "Executive Coaching",
+    category: "Federal",
+    date: "2026-03-22",
+    time: "2:00 PM",
+    status: "approved",
+    message: "Need executive coaching for 3 newly promoted GS-15 division chiefs. Want to discuss scope and timeline.",
+    submittedAt: "2026-03-12",
+  },
+  {
+    id: 3,
+    name: "Mark Thompson",
+    email: "mthompson@vertexcorp.com",
+    phone: "571-555-0267",
+    org: "Vertex Corporation",
+    service: "Organizational Culture Training",
+    category: "Corporate",
+    date: "2026-03-25",
+    time: "11:00 AM",
+    status: "pending",
+    message: "Our engineering division (120 people) has had significant turnover. Looking for culture assessment and training program.",
+    submittedAt: "2026-03-16",
+  },
+  {
+    id: 4,
+    name: "SGM Angela Davis",
+    email: "angela.davis@tradoc.army.mil",
+    phone: "757-555-0311",
+    org: "TRADOC",
+    service: "Speaking Engagements",
+    category: "Military",
+    date: "2026-03-18",
+    time: "9:00 AM",
+    status: "approved",
+    message: "Requesting Mr. Smith as keynote speaker for our annual Senior Leader Development Course. 200+ attendees expected.",
+    submittedAt: "2026-03-10",
+  },
+  {
+    id: 5,
+    name: "Robert Chen",
+    email: "rchen@dhsconsulting.com",
+    phone: "301-555-0455",
+    org: "DHS Consulting Group",
+    service: "Federal HR Consulting",
+    category: "Federal",
+    date: "2026-04-01",
+    time: "3:00 PM",
+    status: "pending",
+    message: "Need help with workforce planning for a new DHS sub-agency. Looking for a comprehensive HR modernization roadmap.",
+    submittedAt: "2026-03-17",
+  },
+  {
+    id: 6,
+    name: "Lisa Morales",
+    email: "lmorales@techforward.io",
+    phone: "404-555-0523",
+    org: "TechForward Inc.",
+    service: "Small Group Workshops",
+    category: "Corporate",
+    date: "2026-03-28",
+    time: "1:00 PM",
+    status: "declined",
+    message: "Half-day workshop for our leadership team of 12. Focus on psychological safety and accountability.",
+    submittedAt: "2026-03-08",
+  },
+];
+
+const DUMMY_CONTACTS = [
+  {
+    id: 101,
+    name: "SSG Kevin Brooks",
+    email: "kbrooks@guard.mil",
+    phone: "540-555-0678",
+    category: "Military",
+    subject: "Unit Leadership Training Inquiry",
+    message: "I'm an NCO looking into leadership training options for our company-level leaders. Can you send info on available programs?",
+    status: "new",
+    submittedAt: "2026-03-17",
+  },
+  {
+    id: 102,
+    name: "Jennifer Walsh",
+    email: "jwalsh@fedscope.gov",
+    phone: "202-555-0891",
+    category: "Federal",
+    subject: "Workforce Planning RFI",
+    message: "Our agency is issuing an RFI for workforce planning services. Would Armvet be interested in responding? Deadline is April 15.",
+    status: "new",
+    submittedAt: "2026-03-16",
+  },
+  {
+    id: 103,
+    name: "David Park",
+    email: "dpark@innovatehr.com",
+    phone: "703-555-0134",
+    category: "Corporate",
+    subject: "Partnership Opportunity",
+    message: "We're an HR tech company and would love to explore a partnership with Armvet for our federal clients. Open to a call?",
+    status: "replied",
+    submittedAt: "2026-03-14",
+  },
+  {
+    id: 104,
+    name: "CW3 Maria Santos",
+    email: "msantos@usar.army.mil",
+    phone: "910-555-0456",
+    category: "Military",
+    subject: "DEOMI Follow-up",
+    message: "Attended Mr. Smith's keynote at DEOMI last year. Our brigade commander wants to discuss bringing him in for a leadership offsite.",
+    status: "new",
+    submittedAt: "2026-03-15",
+  },
+];
+
+const UPCOMING_EVENTS = [
+  {
+    id: "ev1",
+    title: "Q1 Review & Pipeline Planning",
+    date: "2026-03-17",
+    time: "11:00 AM",
+    type: "internal",
+    description: "Internal Q1 performance review and Q2 pipeline strategy session.",
+  },
+  {
+    id: "ev2",
+    title: "TRADOC Speaking Engagement",
+    date: "2026-03-18",
+    time: "9:00 AM",
+    type: "consultation",
+    description: "Keynote for TRADOC Senior Leader Development Course — 200+ attendees expected.",
+  },
+  {
+    id: "ev3",
+    title: "Col. Richardson Discovery Call",
+    date: "2026-03-20",
+    time: "10:00 AM",
+    type: "call",
+    description: "Follow-up discovery call to scope the 2-day battalion leadership workshop for Army National Guard.",
+  },
+  {
+    id: "ev4",
+    title: "NASA Executive Coaching Session",
+    date: "2026-03-22",
+    time: "2:00 PM",
+    type: "consultation",
+    description: "First coaching session with Dr. Owens and the 3 newly promoted GS-15 division chiefs.",
+  },
+  {
+    id: "ev5",
+    title: "FedScope RFI Response Deadline",
+    date: "2026-03-30",
+    time: "5:00 PM",
+    type: "deadline",
+    description: "Deadline to submit response to Jennifer Walsh's workforce planning RFI from FedScope.",
+  },
+  {
+    id: "ev6",
+    title: "DHS HR Modernization Kickoff",
+    date: "2026-04-01",
+    time: "3:00 PM",
+    type: "consultation",
+    description: "Initial scoping session with Robert Chen for DHS sub-agency HR modernization roadmap.",
+  },
+  {
+    id: "ev7",
+    title: "Army National Guard Workshop",
+    date: "2026-04-15",
+    time: "8:00 AM",
+    type: "consultation",
+    description: "2-day leadership workshop for Col. Richardson's battalion team — approx 18 attendees.",
+  },
+];
+
+const SERVICES = [
+  "Leadership Development",
+  "Executive Coaching",
+  "Small Group Workshops",
+  "Individual Development",
+  "Organizational Culture Training",
+  "Federal HR Consulting",
+  "Workforce Planning",
+  "HR Modernization",
+  "Speaking Engagements",
+];
+
+const CATEGORIES = ["Military", "Federal", "Corporate"];
+
+// ─── Icons (inline SVG) ───
+const Icons = {
+  dashboard: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  ),
+  calendar: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  bookings: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  inbox: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-6l-2 3H10l-2-3H2" />
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  check: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  x: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  clock: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  chevronRight: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  ),
+  back: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  ),
+  logout: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  ),
+  menu: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  ),
+  star: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  ),
+  phone: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+  mail: (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <polyline points="22,6 12,13 2,6" />
+    </svg>
+  ),
+  calendarPlus: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="12" y1="14" x2="12" y2="20" />
+      <line x1="9" y1="17" x2="15" y2="17" />
+    </svg>
+  ),
+  filter: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+    </svg>
+  ),
+  search: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  bell: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+  dot: (
+    <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+      <circle cx="4" cy="4" r="4" />
+    </svg>
+  ),
+  download: (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+  externalLink: (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  ),
+};
+
+// ─── Styles ───
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap');
+
+:root {
+  --bg-primary: #0C0F14;
+  --bg-secondary: #141820;
+  --bg-card: #1A1F2B;
+  --bg-card-hover: #1F2537;
+  --bg-input: #141820;
+  --border: #262D3D;
+  --border-light: #1E2433;
+  --text-primary: #F0F2F5;
+  --text-secondary: #8A94A6;
+  --text-muted: #5A6478;
+  --accent: #C8A84E;
+  --accent-dim: rgba(200, 168, 78, 0.12);
+  --accent-glow: rgba(200, 168, 78, 0.25);
+  --green: #34D399;
+  --green-dim: rgba(52, 211, 153, 0.12);
+  --red: #F87171;
+  --red-dim: rgba(248, 113, 113, 0.12);
+  --blue: #60A5FA;
+  --blue-dim: rgba(96, 165, 250, 0.12);
+  --orange: #FBBF24;
+  --orange-dim: rgba(251, 191, 36, 0.12);
+  --purple: #A78BFA;
+  --purple-dim: rgba(167, 139, 250, 0.12);
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --transition: 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Prevent iOS Safari from zooming on input focus (requires font-size >= 16px) */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Prevent double-tap zoom delay on all interactive elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(200,168,78,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(200,168,78,0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.login-logo p {
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+}
+
+.login-card h2 {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.login-card .subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 28px;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color var(--transition);
+  outline: none;
+}
+
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.form-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #0C0F14;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-primary:hover {
+  background: #D4B65E;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-approve {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.btn-approve:hover { background: rgba(52, 211, 153, 0.2); }
+
+.btn-decline {
+  background: var(--red-dim);
+  color: var(--red);
+}
+.btn-decline:hover { background: rgba(248, 113, 113, 0.2); }
+
+.btn-calendar {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+.btn-calendar:hover { background: rgba(96, 165, 250, 0.2); }
+
+.login-error {
+  background: var(--red-dim);
+  color: var(--red);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.login-hint {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.login-hint code {
+  background: var(--bg-input);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+/* ─── Layout ─── */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-logo {
+  padding: 0 24px;
+  margin-bottom: 8px;
+}
+
+.sidebar-logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.sidebar-logo p {
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 20px 24px 8px;
+}
+
+.sidebar-nav {
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  border-left: 3px solid transparent;
+  position: relative;
+  touch-action: manipulation;
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+
+.nav-item.active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-left-color: var(--accent);
+}
+
+.nav-badge {
+  position: absolute;
+  right: 20px;
+  background: var(--accent);
+  color: #0C0F14;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition);
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+
+.logout-btn:hover { color: var(--red); }
+
+.main-content {
+  flex: 1;
+  margin-left: 240px;
+  padding: 28px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  z-index: 90;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-header h1 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99;
+}
+
+/* ─── Page Header ─── */
+.page-header {
+  margin-bottom: 28px;
+}
+
+.page-header h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.page-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ─── Stats Row ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition: border-color var(--transition);
+}
+
+.stat-card:hover {
+  border-color: var(--border-light);
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ─── Card List ─── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: 'DM Sans', sans-serif;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.filter-chip:hover {
+  border-color: var(--text-secondary);
+}
+
+.filter-chip.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  touch-action: manipulation;
+}
+
+.list-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-dim);
+}
+
+.card-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.card-name {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.card-preview {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tag-military { background: rgba(52,211,153,0.12); color: #34D399; }
+.tag-federal { background: rgba(96,165,250,0.12); color: #60A5FA; }
+.tag-corporate { background: rgba(167,139,250,0.12); color: #A78BFA; }
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-pending { background: var(--orange-dim); color: var(--orange); }
+.status-approved { background: var(--green-dim); color: var(--green); }
+.status-declined { background: var(--red-dim); color: var(--red); }
+.status-new { background: var(--blue-dim); color: var(--blue); }
+.status-replied { background: var(--green-dim); color: var(--green); }
+.status-archived { background: rgba(90,100,120,0.2); color: var(--text-muted); }
+.status-on-calendar { background: var(--purple-dim); color: var(--purple); }
+
+.card-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Detail View ─── */
+.detail-view {
+  max-width: 640px;
+}
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+  transition: color var(--transition);
+}
+
+.detail-back:hover { color: var(--accent); }
+
+.detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.detail-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.detail-org {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.detail-field span {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.detail-field a {
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.detail-field a:hover { text-decoration: underline; }
+
+.detail-message {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-message label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.detail-message p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.detail-status-select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-status-select label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.detail-status-select select {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.detail-status-select select:focus {
+  border-color: var(--accent);
+}
+
+/* ─── Calendar View ─── */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.cal-header-cell {
+  background: var(--bg-secondary);
+  padding: 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cal-cell {
+  background: var(--bg-card);
+  padding: 8px;
+  min-height: 90px;
+  font-size: 12px;
+  position: relative;
+}
+
+.cal-cell.other-month {
+  background: var(--bg-secondary);
+  opacity: 0.4;
+}
+
+.cal-cell.today {
+  background: var(--accent-dim);
+}
+
+.cal-day-num {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.cal-cell.today .cal-day-num {
+  color: var(--accent);
+}
+
+.cal-event {
+  background: var(--accent-dim);
+  color: var(--accent);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.cal-event:hover {
+  background: var(--accent-glow);
+}
+
+.cal-event.approved {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.cal-event.event-entry {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.cal-event.event-entry:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.cal-month {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.cal-nav-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.cal-nav-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+
+.cal-nav-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cal-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ─── Toast ─── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.toast-success { border-left: 3px solid var(--green); }
+.toast-info { border-left: 3px solid var(--blue); }
+.toast-error { border-left: 3px solid var(--red); }
+
+.toast-clickable {
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.toast-clickable:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+.toast-body { flex: 1; }
+.toast-cta {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Search ─── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  transition: border-color var(--transition);
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent);
+}
+
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.search-bar input::placeholder { color: var(--text-muted); }
+
+.search-icon { color: var(--text-muted); flex-shrink: 0; }
+
+/* ─── Event Reminder Banner ─── */
+.event-banner {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.event-banner-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.event-banner-content { flex: 1; }
+
+.event-banner-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.event-banner-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.event-banner-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-banner-list-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ─── Dashboard Calendar Row ─── */
+.dash-calendar-row {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 20px;
+  margin-bottom: 28px;
+  align-items: start;
+}
+
+/* ─── Mini Calendar ─── */
+.mini-cal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.mini-cal-header {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.mini-cal-dow {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 8px;
+}
+
+.mini-cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  position: relative;
+  cursor: default;
+  gap: 1px;
+}
+
+.mini-cal-day.other-month {
+  color: var(--text-muted);
+  opacity: 0.3;
+}
+
+.mini-cal-day.today {
+  background: var(--accent);
+  color: #0C0F14;
+  font-weight: 700;
+}
+
+.mini-cal-day.has-event:not(.today) {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.mini-cal-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.mini-cal-day.today .mini-cal-dot {
+  background: rgba(12,15,20,0.6);
+}
+
+/* ─── Upcoming Events Panel ─── */
+.upcoming-events {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-events-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.upcoming-event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition);
+}
+
+.upcoming-event-item:last-child { border-bottom: none; }
+
+.upcoming-event-item.clickable { cursor: pointer; }
+.upcoming-event-item.clickable:hover { background: var(--bg-card-hover); }
+
+.event-date-badge {
+  flex-shrink: 0;
+  width: 42px;
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 4px 4px;
+}
+
+.event-date-badge .ev-month {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  display: block;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.event-date-badge .ev-day {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+  display: block;
+}
+
+.event-date-badge.today-badge {
+  background: var(--accent-dim);
+  border-color: var(--accent-glow);
+}
+
+.event-date-badge.today-badge .ev-day { color: var(--accent); }
+
+.event-info { flex: 1; min-width: 0; }
+
+.event-info-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.event-info-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.event-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.event-type-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.event-type-consultation { background: var(--green-dim); color: var(--green); }
+.event-type-internal { background: var(--accent-dim); color: var(--accent); }
+.event-type-deadline { background: var(--red-dim); color: var(--red); }
+.event-type-call { background: var(--blue-dim); color: var(--blue); }
+
+.event-today-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--orange-dim);
+  color: var(--orange);
+}
+
+.event-tomorrow-pill {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.upcoming-events-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ─── Event Detail ─── */
+.event-detail-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.event-detail-type label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.event-detail-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Make the banner and upcoming-event-items with events look clickable */
+.event-banner.clickable {
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.event-banner.clickable:hover {
+  background: rgba(200, 168, 78, 0.18);
+}
+
+/* ─── Day Popup (mini-calendar click) ─── */
+.day-popup {
+  background: var(--bg-card);
+  border: 1px solid var(--accent-glow);
+  border-radius: var(--radius);
+  margin-bottom: 28px;
+  overflow: hidden;
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.day-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-dim);
+}
+
+.day-popup-header-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-popup-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 4px;
+  font-family: inherit;
+  touch-action: manipulation;
+  border-radius: 4px;
+  transition: color var(--transition);
+}
+.day-popup-close:hover { color: var(--text-primary); }
+
+.day-popup-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+.day-popup-event:last-child { border-bottom: none; }
+
+.day-popup-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.day-popup-event-info { flex: 1; min-width: 0; }
+
+.day-popup-event-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.day-popup-event-title:hover { color: var(--accent); }
+
+.day-popup-event-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.day-popup-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Calendar Action Buttons ─── */
+.btn-gcal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.btn-gcal:hover { background: #1558d6; }
+
+.btn-ics {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-ics:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* Mini-cal clickable days */
+.mini-cal-day.has-event { cursor: pointer; }
+.mini-cal-day.has-event:hover:not(.today):not(.selected-day) {
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+}
+.mini-cal-day.selected-day:not(.today) {
+  background: var(--accent-dim);
+  border-radius: 6px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.mini-cal-day.selected-day:not(.today) .mini-cal-dot { background: var(--accent); }
+
+/* ─── Empty State ─── */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  font-size: 14px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .sidebar-overlay.show {
+    display: block;
+  }
+  .mobile-header {
+    display: flex;
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 72px 16px 24px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .stat-value { font-size: 22px; }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .cal-grid { display: none; }
+  .cal-mobile-list { display: block !important; }
+  .page-header h2 { font-size: 20px; }
+  .dash-calendar-row { grid-template-columns: 1fr; }
+  .toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+  .toast { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .detail-card { padding: 20px; }
+  .detail-name { font-size: 18px; }
+}
+`;
+
+// ─── Helpers ───
+function statusColor(s) {
+  const map = { pending: "var(--orange)", approved: "var(--green)", declined: "var(--red)", new: "var(--blue)", replied: "var(--green)", archived: "var(--text-muted)", "on-calendar": "var(--purple)" };
+  return map[s] || "var(--text-muted)";
+}
+
+function formatDate(d) {
+  if (!d) return "";
+  const str = typeof d === "string" && d.length === 10 ? d + "T00:00:00" : d;
+  return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ─── Calendar Link Utilities ───
+function parseTime12(timeStr) {
+  const [timePart, period] = timeStr.trim().split(" ");
+  let [h, m] = timePart.split(":").map(Number);
+  if (period === "PM" && h !== 12) h += 12;
+  if (period === "AM" && h === 12) h = 0;
+  return { h, m };
+}
+
+function toCalDT(dateStr, timeStr) {
+  const { h, m } = parseTime12(timeStr);
+  const d = dateStr.replace(/-/g, "");
+  return `${d}T${String(h).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+}
+
+function toCalDTEnd(dateStr, timeStr, hours = 1) {
+  const { h, m } = parseTime12(timeStr);
+  const endH = Math.min(h + hours, 23);
+  const d = dateStr.replace(/-/g, "");
+  return `${d}T${String(endH).padStart(2, "0")}${String(m).padStart(2, "0")}00`;
+}
+
+function buildGCalUrl(title, dateStr, timeStr, description = "") {
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: title,
+    dates: `${toCalDT(dateStr, timeStr)}/${toCalDTEnd(dateStr, timeStr)}`,
+    details: description,
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function downloadICS(title, dateStr, timeStr, description = "") {
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ArmVet Dashboard//EN",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `DTSTART:${toCalDT(dateStr, timeStr)}`,
+    `DTEND:${toCalDTEnd(dateStr, timeStr)}`,
+    `SUMMARY:${title.replace(/[,;\\]/g, (c) => "\\" + c)}`,
+    `DESCRIPTION:${description.replace(/\n/g, "\\n").replace(/[,;\\]/g, (c) => "\\" + c)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${title.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-]/g, "")}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── Components ───
+function Toast({ toasts, onEventClick, onBookingClick }) {
+  return (
+    <div className="toast-container">
+      {toasts.map((t) => {
+        const clickable = t.eventId || t.bookingId;
+        const handleClick = clickable
+          ? () => { if (t.eventId) onEventClick?.(t.eventId); else onBookingClick?.(t.bookingId); }
+          : undefined;
+        return (
+          <div
+            key={t.id}
+            className={`toast toast-${t.type || "success"}${clickable ? " toast-clickable" : ""}`}
+            onClick={handleClick}
+          >
+            {t.type === "success" && <span style={{ color: "var(--green)" }}>{Icons.check}</span>}
+            {t.type === "info" && <span style={{ color: "var(--blue)" }}>{Icons.calendarPlus}</span>}
+            <span className="toast-body">{t.message}</span>
+            {clickable && <span className="toast-cta">View →</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Sidebar({ page, setPage, bookings, contacts, isOpen, onClose, onLogout }) {
+  const pendingCount = bookings.filter((b) => b.status === "pending").length;
+  const newCount = contacts.filter((c) => c.status === "new").length;
+
+  return (
+    <>
+      <div className={`sidebar-overlay ${isOpen ? "show" : ""}`} onClick={onClose} />
+      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        <div className="sidebar-logo">
+          <h1>Armvet</h1>
+          <p>Admin Portal</p>
+        </div>
+        <div className="sidebar-label">Manage</div>
+        <nav className="sidebar-nav">
+          {[
+            { id: "dashboard", icon: Icons.dashboard, label: "Dashboard" },
+            { id: "bookings", icon: Icons.bookings, label: "Bookings", badge: pendingCount },
+            { id: "contacts", icon: Icons.inbox, label: "Inbox", badge: newCount },
+            { id: "calendar", icon: Icons.calendar, label: "Calendar" },
+          ].map((item) => (
+            <div
+              key={item.id}
+              className={`nav-item ${page === item.id ? "active" : ""}`}
+              onClick={() => { setPage(item.id); onClose(); }}
+            >
+              {item.icon}
+              {item.label}
+              {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={onLogout}>
+            {Icons.logout}
+            Sign Out
+          </button>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function StatCard({ label, value, sub, color }) {
+  return (
+    <div className="stat-card">
+      <div className="stat-label">{label}</div>
+      <div className="stat-value" style={color ? { color } : {}}>
+        {value}
+      </div>
+      {sub && <div className="stat-sub">{sub}</div>}
+    </div>
+  );
+}
+
+function DashboardPage({ bookings, contacts, events, setPage, setSelectedBooking, setSelectedContact, onEventClick }) {
+  const todayStr = "2026-03-17";
+  const tomorrowStr = "2026-03-18";
+
+  const pending = bookings.filter((b) => b.status === "pending");
+  const approved = bookings.filter((b) => b.status === "approved" || b.status === "on-calendar");
+  const newContacts = contacts.filter((c) => c.status === "new");
+
+  // Build combined upcoming event list (events + approved bookings), sorted by date
+  const allUpcoming = [
+    ...events.map((e) => ({ ...e, _source: "event" })),
+    ...approved.map((b) => ({
+      id: `b-${b.id}`,
+      title: `${b.service} — ${b.name}`,
+      date: b.date,
+      time: b.time,
+      type: "consultation",
+      _source: "booking",
+      bookingId: b.id,
+    })),
+  ]
+    .filter((e) => e.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+    .slice(0, 6);
+
+  const todayEvents = allUpcoming.filter((e) => e.date === todayStr);
+  const tomorrowEvents = allUpcoming.filter((e) => e.date === tomorrowStr);
+
+  // Mini-calendar for March 2026
+  const calYear = 2026, calMonth = 2; // March = index 2
+  const firstDay = new Date(calYear, calMonth, 1).getDay(); // 0 = Sunday for March 2026
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate(); // 31
+  const daysInPrev = new Date(calYear, calMonth, 0).getDate(); // 28
+
+  const calCells = [];
+  for (let i = firstDay - 1; i >= 0; i--) calCells.push({ day: daysInPrev - i, other: true });
+  for (let d = 1; d <= daysInMonth; d++) calCells.push({ day: d, other: false });
+  const needed = Math.ceil(calCells.length / 7) * 7;
+  for (let i = 1; calCells.length < needed; i++) calCells.push({ day: i, other: true });
+
+  // Days in March that have events
+  const marchPrefix = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-`;
+  const eventDays = new Set([
+    ...events.filter((e) => e.date.startsWith(marchPrefix)).map((e) => parseInt(e.date.split("-")[2])),
+    ...approved.filter((b) => b.date.startsWith(marchPrefix)).map((b) => parseInt(b.date.split("-")[2])),
+  ]);
+
+  // Selected day popup state
+  const [selectedCalDay, setSelectedCalDay] = useState(null);
+  const selectedDayStr = selectedCalDay
+    ? `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedCalDay).padStart(2, "0")}`
+    : null;
+  const selectedDayEntries = selectedDayStr
+    ? [
+        ...events.filter((e) => e.date === selectedDayStr).map((e) => ({ ...e, _source: "event" })),
+        ...approved.filter((b) => b.date === selectedDayStr).map((b) => ({ ...b, _source: "booking" })),
+      ]
+    : [];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Dashboard</h2>
+        <p>Overview of bookings, inquiries, and upcoming events</p>
+      </div>
+
+      {/* Stats */}
+      <div className="stats-grid">
+        <StatCard label="Pending Bookings" value={pending.length} sub="Need your review" color="var(--orange)" />
+        <StatCard label="Approved" value={approved.length} sub="Confirmed consultations" color="var(--green)" />
+        <StatCard label="New Messages" value={newContacts.length} sub="Unread inquiries" color="var(--blue)" />
+        <StatCard label="Total Leads" value={bookings.length + contacts.length} sub="All time" />
+      </div>
+
+      {/* Today's event reminder banner — clickable, navigates to the first today event */}
+      {(todayEvents.length > 0 || tomorrowEvents.length > 0) && (
+        <div
+          className={`event-banner${todayEvents.length > 0 ? " clickable" : ""}`}
+          onClick={todayEvents.length > 0 ? () => onEventClick(todayEvents[0].id) : undefined}
+        >
+          <span className="event-banner-icon">{Icons.bell}</span>
+          <div className="event-banner-content">
+            <div className="event-banner-title">
+              {todayEvents.length > 0
+                ? `${todayEvents.length} event${todayEvents.length > 1 ? "s" : ""} scheduled for today`
+                : `Upcoming tomorrow: ${tomorrowEvents[0].title}`}
+            </div>
+            <div className="event-banner-list">
+              {todayEvents.map((ev) => (
+                <div key={ev.id} className="event-banner-list-item">
+                  <span style={{ color: "var(--accent)" }}>{Icons.dot}</span>
+                  {ev.title} <span style={{ color: "var(--text-muted)" }}>at {ev.time}</span>
+                </div>
+              ))}
+              {todayEvents.length > 0 && tomorrowEvents.length > 0 && (
+                <div className="event-banner-list-item">
+                  <span style={{ color: "var(--blue)" }}>{Icons.dot}</span>
+                  Tomorrow: {tomorrowEvents[0].title} at {tomorrowEvents[0].time}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mini calendar + upcoming events side by side */}
+      <div className="dash-calendar-row">
+        {/* Mini Calendar */}
+        <div className="mini-cal">
+          <div className="mini-cal-header">March 2026</div>
+          <div className="mini-cal-grid">
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+              <div key={d} className="mini-cal-dow">{d}</div>
+            ))}
+            {calCells.map((cell, i) => {
+              const isToday = !cell.other && cell.day === 17;
+              const hasEvent = !cell.other && eventDays.has(cell.day);
+              const isSelected = !cell.other && selectedCalDay === cell.day;
+              return (
+                <div
+                  key={i}
+                  className={`mini-cal-day${cell.other ? " other-month" : ""}${isToday ? " today" : ""}${hasEvent ? " has-event" : ""}${isSelected ? " selected-day" : ""}`}
+                  onClick={hasEvent ? () => setSelectedCalDay(isSelected ? null : cell.day) : undefined}
+                >
+                  {cell.day}
+                  {hasEvent && <span className="mini-cal-dot" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Upcoming Events */}
+        <div className="upcoming-events">
+          <div className="upcoming-events-header">
+            {Icons.calendar}
+            Upcoming Events
+          </div>
+          {allUpcoming.length === 0 ? (
+            <div className="empty-state"><p>No upcoming events.</p></div>
+          ) : (
+            allUpcoming.map((ev) => {
+              const [, , dayPart] = ev.date.split("-");
+              const monthAbbr = new Date(ev.date + "T00:00:00").toLocaleString("en-US", { month: "short" });
+              const isToday = ev.date === todayStr;
+              const isTomorrow = ev.date === tomorrowStr;
+              const isBooking = ev._source === "booking";
+              const handleItemClick = isBooking
+                ? () => { setSelectedBooking(ev.bookingId); setPage("booking-detail"); }
+                : () => onEventClick(ev.id);
+              return (
+                <div
+                  key={ev.id}
+                  className="upcoming-event-item clickable"
+                  onClick={handleItemClick}
+                >
+                  <div className={`event-date-badge${isToday ? " today-badge" : ""}`}>
+                    <span className="ev-month">{monthAbbr}</span>
+                    <span className="ev-day">{parseInt(dayPart)}</span>
+                  </div>
+                  <div className="event-info">
+                    <div className="event-info-title">{ev.title}</div>
+                    <div className="event-info-meta">
+                      <span className="event-time">{ev.time}</span>
+                      {isToday && <span className="event-today-pill">Today</span>}
+                      {isTomorrow && <span className="event-tomorrow-pill">Tomorrow</span>}
+                      <span className={`event-type-badge event-type-${ev.type}`}>{ev.type}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div className="upcoming-events-footer">
+            <button className="btn-secondary" style={{ fontSize: 12 }} onClick={() => setPage("calendar")}>
+              Open Full Calendar →
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Day detail popup — appears when a mini-cal day with events is clicked */}
+      {selectedCalDay && selectedDayEntries.length > 0 && (
+        <div className="day-popup">
+          <div className="day-popup-header">
+            <div className="day-popup-header-title">
+              {Icons.calendar}
+              {new Date(`${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(selectedCalDay).padStart(2, "0")}T00:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </div>
+            <button className="day-popup-close" onClick={() => setSelectedCalDay(null)}>×</button>
+          </div>
+          {selectedDayEntries.map((entry) => {
+            const isBooking = entry._source === "booking";
+            const title = isBooking ? `${entry.service} — ${entry.name} (${entry.org})` : entry.title;
+            const description = isBooking ? (entry.message || "") : (entry.description || "");
+            const dotColor = isBooking
+              ? (entry.status === "on-calendar" ? "var(--purple)" : "var(--green)")
+              : (EVENT_TYPE_COLORS[entry.type] || "var(--blue)");
+            const typeLabel = isBooking ? "consultation" : entry.type;
+            return (
+              <div key={entry.id} className="day-popup-event">
+                <div className="day-popup-dot" style={{ background: dotColor }} />
+                <div className="day-popup-event-info">
+                  <div
+                    className="day-popup-event-title"
+                    onClick={isBooking
+                      ? () => { setSelectedBooking(entry.id); setPage("booking-detail"); }
+                      : () => onEventClick(entry.id)
+                    }
+                  >
+                    {isBooking ? `${entry.service} — ${entry.name}` : entry.title}
+                  </div>
+                  <div className="day-popup-event-meta">
+                    <span>{entry.time}</span>
+                    {isBooking && <span>· {entry.org}</span>}
+                    <span className={`event-type-badge event-type-${typeLabel}`}>{typeLabel}</span>
+                  </div>
+                  <div className="day-popup-actions">
+                    <a
+                      href={buildGCalUrl(title, entry.date, entry.time, description)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-gcal"
+                    >
+                      {Icons.externalLink} Google Calendar
+                    </a>
+                    <button className="btn-ics" onClick={() => downloadICS(title, entry.date, entry.time, description)}>
+                      {Icons.download} Download .ics
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Pending bookings needing attention */}
+      {pending.length > 0 && (
+        <div style={{ marginBottom: 28 }}>
+          <div className="section-header">
+            <span className="section-title">Needs Your Attention</span>
+            <button className="btn-secondary" onClick={() => setPage("bookings")}>
+              View All Bookings
+            </button>
+          </div>
+          <div className="card-list">
+            {pending.slice(0, 3).map((b) => (
+              <div key={b.id} className="list-card" onClick={() => { setSelectedBooking(b.id); setPage("booking-detail"); }}>
+                <div className="card-status-dot" style={{ background: statusColor(b.status) }} />
+                <div className="card-body">
+                  <div className="card-top-row">
+                    <span className="card-name">{b.name}</span>
+                    <span className="card-date">{formatDate(b.date)}</span>
+                  </div>
+                  <div className="card-preview">{b.service} — {b.org}</div>
+                  <div className="card-tags">
+                    <span className={`tag tag-${b.category.toLowerCase()}`}>{b.category}</span>
+                    <span className={`status-badge status-${b.status}`}>{b.status}</span>
+                  </div>
+                </div>
+                <span className="card-chevron">{Icons.chevronRight}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* New contact inquiries */}
+      {newContacts.length > 0 && (
+        <div>
+          <div className="section-header">
+            <span className="section-title">New Inquiries</span>
+            <button className="btn-secondary" onClick={() => setPage("contacts")}>
+              View Inbox
+            </button>
+          </div>
+          <div className="card-list">
+            {newContacts.slice(0, 3).map((c) => (
+              <div key={c.id} className="list-card" onClick={() => { setSelectedContact(c.id); setPage("contact-detail"); }}>
+                <div className="card-status-dot" style={{ background: statusColor(c.status) }} />
+                <div className="card-body">
+                  <div className="card-top-row">
+                    <span className="card-name">{c.name}</span>
+                    <span className="card-date">{formatDate(c.submittedAt)}</span>
+                  </div>
+                  <div className="card-preview">{c.subject}</div>
+                  <div className="card-tags">
+                    <span className={`tag tag-${c.category.toLowerCase()}`}>{c.category}</span>
+                    <span className={`status-badge status-${c.status}`}>{c.status}</span>
+                  </div>
+                </div>
+                <span className="card-chevron">{Icons.chevronRight}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BookingsPage({ bookings, setPage, setSelectedBooking, searchTerm, setSearchTerm, statusFilter, setStatusFilter, categoryFilter, setCategoryFilter }) {
+  const filtered = bookings.filter((b) => {
+    const matchSearch = !searchTerm || b.name.toLowerCase().includes(searchTerm.toLowerCase()) || b.org.toLowerCase().includes(searchTerm.toLowerCase()) || b.service.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = statusFilter === "all" || b.status === statusFilter;
+    const matchCat = categoryFilter === "all" || b.category === categoryFilter;
+    return matchSearch && matchStatus && matchCat;
+  });
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Consultation Bookings</h2>
+        <p>Manage requests for proposals and consultation appointments</p>
+      </div>
+
+      <div className="search-bar">
+        <span className="search-icon">{Icons.search}</span>
+        <input placeholder="Search by name, organization, or service..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      </div>
+
+      <div className="section-header">
+        <div className="filters">
+          {["all", "pending", "approved", "on-calendar", "declined"].map((s) => (
+            <button key={s} className={`filter-chip ${statusFilter === s ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
+              {s === "all" ? "All" : s === "on-calendar" ? "On Calendar" : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+        <div className="filters">
+          {["all", ...CATEGORIES].map((c) => (
+            <button key={c} className={`filter-chip ${categoryFilter === c ? "active" : ""}`} onClick={() => setCategoryFilter(c)}>
+              {c === "all" ? "All Sectors" : c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-list">
+        {filtered.length === 0 ? (
+          <div className="empty-state"><p>No bookings match your filters.</p></div>
+        ) : (
+          filtered.map((b) => (
+            <div key={b.id} className="list-card" onClick={() => { setSelectedBooking(b.id); setPage("booking-detail"); }}>
+              <div className="card-status-dot" style={{ background: statusColor(b.status) }} />
+              <div className="card-body">
+                <div className="card-top-row">
+                  <span className="card-name">{b.name}</span>
+                  <span className="card-date">{b.time} · {formatDate(b.date)}</span>
+                </div>
+                <div className="card-preview">{b.service} — {b.org}</div>
+                <div className="card-tags">
+                  <span className={`tag tag-${b.category.toLowerCase()}`}>{b.category}</span>
+                  <span className={`status-badge status-${b.status}`}>{b.status === "on-calendar" ? "On Calendar" : b.status}</span>
+                </div>
+              </div>
+              <span className="card-chevron">{Icons.chevronRight}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BookingDetail({ booking, onBack, onUpdateStatus, onAddToCalendar, addToast }) {
+  if (!booking) return null;
+
+  const handleStatusChange = (newStatus) => {
+    onUpdateStatus(booking.id, newStatus);
+    addToast({ message: `Booking ${newStatus === "approved" ? "approved" : newStatus === "declined" ? "declined" : "updated"} — ${booking.name}`, type: "success" });
+  };
+
+  return (
+    <div className="detail-view">
+      <button className="detail-back" onClick={onBack}>{Icons.back} Back to Bookings</button>
+      <div className="detail-card">
+        <div className="detail-header">
+          <div>
+            <div className="detail-name">{booking.name}</div>
+            <div className="detail-org">{booking.org}</div>
+          </div>
+          <span className={`status-badge status-${booking.status}`}>{booking.status === "on-calendar" ? "On Calendar" : booking.status}</span>
+        </div>
+
+        <div className="detail-grid">
+          <div className="detail-field">
+            <label>Service Requested</label>
+            <span>{booking.service}</span>
+          </div>
+          <div className="detail-field">
+            <label>Sector</label>
+            <span className={`tag tag-${booking.category.toLowerCase()}`}>{booking.category}</span>
+          </div>
+          <div className="detail-field">
+            <label>Consultation Date</label>
+            <span>{formatDate(booking.date)} at {booking.time}</span>
+          </div>
+          <div className="detail-field">
+            <label>Submitted</label>
+            <span>{formatDate(booking.submittedAt)}</span>
+          </div>
+          <div className="detail-field">
+            <label>Email</label>
+            <a href={`mailto:${booking.email}`}>{booking.email}</a>
+          </div>
+          <div className="detail-field">
+            <label>Phone</label>
+            <a href={`tel:${booking.phone}`}>{booking.phone}</a>
+          </div>
+        </div>
+
+        <div className="detail-message">
+          <label>Message</label>
+          <p>{booking.message}</p>
+        </div>
+
+        <div className="detail-status-select">
+          <label>Status:</label>
+          <select value={booking.status} onChange={(e) => handleStatusChange(e.target.value)}>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="declined">Declined</option>
+            <option value="on-calendar">On Calendar</option>
+          </select>
+        </div>
+
+        <div className="detail-actions">
+          {booking.status === "pending" && (
+            <>
+              <button className="btn-action btn-approve" onClick={() => handleStatusChange("approved")}>
+                {Icons.check} Approve
+              </button>
+              <button className="btn-action btn-decline" onClick={() => handleStatusChange("declined")}>
+                {Icons.x} Decline
+              </button>
+            </>
+          )}
+          {(booking.status === "approved") && (
+            <button className="btn-action btn-calendar" onClick={() => { onAddToCalendar(booking.id); addToast({ message: `Added to calendar — ${booking.name}, ${formatDate(booking.date)}`, type: "info" }); }}>
+              {Icons.calendarPlus} Add to Calendar
+            </button>
+          )}
+          {booking.status === "on-calendar" && (
+            <span style={{ fontSize: 13, color: "var(--purple)", display: "flex", alignItems: "center", gap: 6 }}>
+              {Icons.check} On your calendar
+            </span>
+          )}
+          <a href={`mailto:${booking.email}`} className="btn-action" style={{ background: "var(--accent-dim)", color: "var(--accent)", textDecoration: "none" }}>
+            {Icons.mail} Email Client
+          </a>
+          <a href={`tel:${booking.phone}`} className="btn-action" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", textDecoration: "none" }}>
+            {Icons.phone} Call
+          </a>
+        </div>
+
+        {/* Calendar export — only show for confirmed bookings */}
+        {(booking.status === "approved" || booking.status === "on-calendar") && (
+          <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--text-muted)", marginBottom: 10 }}>
+              Add to Calendar
+            </div>
+            <div className="day-popup-actions">
+              <a
+                href={buildGCalUrl(
+                  `${booking.service} — ${booking.name} (${booking.org})`,
+                  booking.date,
+                  booking.time,
+                  booking.message || ""
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-gcal"
+              >
+                {Icons.externalLink} Google Calendar
+              </a>
+              <button
+                className="btn-ics"
+                onClick={() => downloadICS(
+                  `${booking.service} — ${booking.name} (${booking.org})`,
+                  booking.date,
+                  booking.time,
+                  booking.message || ""
+                )}
+              >
+                {Icons.download} Download .ics
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContactsPage({ contacts, setPage, setSelectedContact, searchTerm, setSearchTerm, contactStatusFilter, setContactStatusFilter }) {
+  const filtered = contacts.filter((c) => {
+    const matchSearch = !searchTerm || c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = contactStatusFilter === "all" || c.status === contactStatusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Contact Inbox</h2>
+        <p>Messages from the website contact form</p>
+      </div>
+
+      <div className="search-bar">
+        <span className="search-icon">{Icons.search}</span>
+        <input placeholder="Search by name or subject..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+      </div>
+
+      <div className="section-header">
+        <div className="filters">
+          {["all", "new", "replied", "archived"].map((s) => (
+            <button key={s} className={`filter-chip ${contactStatusFilter === s ? "active" : ""}`} onClick={() => setContactStatusFilter(s)}>
+              {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card-list">
+        {filtered.length === 0 ? (
+          <div className="empty-state"><p>No messages match your filters.</p></div>
+        ) : (
+          filtered.map((c) => (
+            <div key={c.id} className="list-card" onClick={() => { setSelectedContact(c.id); setPage("contact-detail"); }}>
+              <div className="card-status-dot" style={{ background: statusColor(c.status) }} />
+              <div className="card-body">
+                <div className="card-top-row">
+                  <span className="card-name">{c.name}</span>
+                  <span className="card-date">{formatDate(c.submittedAt)}</span>
+                </div>
+                <div className="card-preview">{c.subject}</div>
+                <div className="card-tags">
+                  <span className={`tag tag-${c.category.toLowerCase()}`}>{c.category}</span>
+                  <span className={`status-badge status-${c.status}`}>{c.status}</span>
+                </div>
+              </div>
+              <span className="card-chevron">{Icons.chevronRight}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContactDetail({ contact, onBack, onUpdateStatus, addToast }) {
+  if (!contact) return null;
+
+  const handleStatusChange = (newStatus) => {
+    onUpdateStatus(contact.id, newStatus);
+    addToast({ message: `Marked as ${newStatus} — ${contact.name}`, type: "success" });
+  };
+
+  return (
+    <div className="detail-view">
+      <button className="detail-back" onClick={onBack}>{Icons.back} Back to Inbox</button>
+      <div className="detail-card">
+        <div className="detail-header">
+          <div>
+            <div className="detail-name">{contact.name}</div>
+            <div className="detail-org">{contact.subject}</div>
+          </div>
+          <span className={`status-badge status-${contact.status}`}>{contact.status}</span>
+        </div>
+
+        <div className="detail-grid">
+          <div className="detail-field">
+            <label>Sector</label>
+            <span className={`tag tag-${contact.category.toLowerCase()}`}>{contact.category}</span>
+          </div>
+          <div className="detail-field">
+            <label>Received</label>
+            <span>{formatDate(contact.submittedAt)}</span>
+          </div>
+          <div className="detail-field">
+            <label>Email</label>
+            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </div>
+          <div className="detail-field">
+            <label>Phone</label>
+            <a href={`tel:${contact.phone}`}>{contact.phone}</a>
+          </div>
+        </div>
+
+        <div className="detail-message">
+          <label>Message</label>
+          <p>{contact.message}</p>
+        </div>
+
+        <div className="detail-status-select">
+          <label>Status:</label>
+          <select value={contact.status} onChange={(e) => handleStatusChange(e.target.value)}>
+            <option value="new">New</option>
+            <option value="replied">Replied</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+
+        <div className="detail-actions">
+          {contact.status === "new" && (
+            <button className="btn-action btn-approve" onClick={() => handleStatusChange("replied")}>
+              {Icons.check} Mark as Replied
+            </button>
+          )}
+          <a href={`mailto:${contact.email}`} className="btn-action" style={{ background: "var(--accent-dim)", color: "var(--accent)", textDecoration: "none" }}>
+            {Icons.mail} Email Client
+          </a>
+          <a href={`tel:${contact.phone}`} className="btn-action" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-secondary)", textDecoration: "none" }}>
+            {Icons.phone} Call
+          </a>
+          {contact.status !== "archived" && (
+            <button className="btn-action" style={{ background: "rgba(90,100,120,0.15)", color: "var(--text-muted)" }} onClick={() => handleStatusChange("archived")}>
+              Archive
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CalendarPage({ bookings, events, setPage, setSelectedBooking, onEventClick }) {
+  const [monthOffset, setMonthOffset] = useState(0);
+  const today = new Date(2026, 2, 17); // March 17, 2026
+  const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const monthName = viewDate.toLocaleString("en-US", { month: "long", year: "numeric" });
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+
+  const cells = [];
+  for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, otherMonth: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, otherMonth: false });
+  const remaining = 42 - cells.length;
+  for (let i = 1; i <= remaining; i++) cells.push({ day: i, otherMonth: true });
+
+  const calBookings = bookings.filter((b) => b.status === "approved" || b.status === "on-calendar");
+
+  // Returns mixed array of bookings + standalone events for a given day
+  function entriesForDay(day) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dayBookings = calBookings
+      .filter((b) => b.date === dateStr)
+      .map((b) => ({ ...b, _kind: "booking" }));
+    const dayEvents = events
+      .filter((e) => e.date === dateStr)
+      .map((e) => ({ ...e, _kind: "event" }));
+    return [...dayBookings, ...dayEvents];
+  }
+
+  const isToday = (cell) =>
+    !cell.otherMonth && cell.day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+  // Mobile upcoming list — bookings + standalone events merged and sorted
+  const todayDate = today.toDateString();
+  const upcomingBookings = calBookings
+    .filter((b) => new Date(b.date + "T00:00:00") >= new Date(todayDate))
+    .map((b) => ({ ...b, _kind: "booking", sortKey: b.date + b.time }));
+  const upcomingEvents = events
+    .filter((e) => new Date(e.date + "T00:00:00") >= new Date(todayDate))
+    .map((e) => ({ ...e, _kind: "event", name: e.title, sortKey: e.date + e.time }));
+  const upcoming = [...upcomingBookings, ...upcomingEvents].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Calendar</h2>
+        <p>Approved consultations and scheduled events</p>
+      </div>
+
+      <div className="cal-legend">
+        <div className="cal-legend-item">
+          <div className="cal-legend-dot" style={{ background: "var(--green)" }} />
+          Approved booking
+        </div>
+        <div className="cal-legend-item">
+          <div className="cal-legend-dot" style={{ background: "var(--purple)" }} />
+          On Calendar
+        </div>
+        <div className="cal-legend-item">
+          <div className="cal-legend-dot" style={{ background: "var(--blue)" }} />
+          Event
+        </div>
+      </div>
+
+      <div className="cal-nav">
+        <span className="cal-month">{monthName}</span>
+        <div className="cal-nav-btns">
+          <button className="cal-nav-btn" onClick={() => setMonthOffset((m) => m - 1)}>← Prev</button>
+          <button className="cal-nav-btn" onClick={() => setMonthOffset(0)}>Today</button>
+          <button className="cal-nav-btn" onClick={() => setMonthOffset((m) => m + 1)}>Next →</button>
+        </div>
+      </div>
+
+      <div className="cal-grid">
+        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+          <div key={d} className="cal-header-cell">{d}</div>
+        ))}
+        {cells.map((cell, i) => {
+          const entries = cell.otherMonth ? [] : entriesForDay(cell.day);
+          return (
+            <div key={i} className={`cal-cell ${cell.otherMonth ? "other-month" : ""} ${isToday(cell) ? "today" : ""}`}>
+              <div className="cal-day-num">{cell.day}</div>
+              {entries.map((entry) => {
+                if (entry._kind === "event") {
+                  return (
+                    <div
+                      key={entry.id}
+                      className="cal-event event-entry"
+                      title={`${entry.title} at ${entry.time}`}
+                      onClick={() => onEventClick(entry.id)}
+                    >
+                      {entry.time} {entry.title.split(" ")[0]}
+                    </div>
+                  );
+                }
+                // booking
+                const cls = entry.status === "on-calendar" ? "" : "approved";
+                const style = entry.status === "on-calendar" ? { background: "var(--purple-dim)", color: "var(--purple)" } : {};
+                return (
+                  <div
+                    key={entry.id}
+                    className={`cal-event ${cls}`}
+                    style={style}
+                    onClick={() => { setSelectedBooking(entry.id); setPage("booking-detail"); }}
+                    title={`${entry.name} — ${entry.service}`}
+                  >
+                    {entry.time} {entry.name.split(" ")[1] || entry.name}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Mobile list fallback */}
+      <div className="cal-mobile-list" style={{ display: "none" }}>
+        <div className="section-title" style={{ marginBottom: 12 }}>Upcoming</div>
+        {upcoming.length === 0 ? (
+          <div className="empty-state"><p>No upcoming events or consultations.</p></div>
+        ) : (
+          <div className="card-list">
+            {upcoming.map((item) => (
+              <div
+                key={item.id}
+                className="list-card"
+                onClick={item._kind === "booking"
+                  ? () => { setSelectedBooking(item.id); setPage("booking-detail"); }
+                  : () => onEventClick(item.id)
+                }
+              >
+                <div className="card-status-dot" style={{
+                  background: item._kind === "event" ? "var(--blue)"
+                    : item.status === "on-calendar" ? "var(--purple)" : "var(--green)"
+                }} />
+                <div className="card-body">
+                  <div className="card-top-row">
+                    <span className="card-name">{item.name}</span>
+                    <span className="card-date">{item.time}</span>
+                  </div>
+                  <div className="card-preview">
+                    {item._kind === "booking" ? `${item.service} — ` : ""}{formatDate(item.date)}
+                  </div>
+                  <div className="card-tags">
+                    {item._kind === "booking" ? (
+                      <span className={`status-badge status-${item.status}`}>
+                        {item.status === "on-calendar" ? "On Calendar" : "Approved"}
+                      </span>
+                    ) : (
+                      <span className={`event-type-badge event-type-${item.type}`}>{item.type}</span>
+                    )}
+                  </div>
+                </div>
+                {item._kind === "booking" && <span className="card-chevron">{Icons.chevronRight}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Event Detail ───
+const EVENT_TYPE_LABELS = {
+  consultation: "Consultation",
+  internal: "Internal Meeting",
+  call: "Discovery Call",
+  deadline: "Deadline",
+};
+
+const EVENT_TYPE_COLORS = {
+  consultation: "var(--green)",
+  internal: "var(--accent)",
+  call: "var(--blue)",
+  deadline: "var(--red)",
+};
+
+const EVENT_TYPE_DIM = {
+  consultation: "var(--green-dim)",
+  internal: "var(--accent-dim)",
+  call: "var(--blue-dim)",
+  deadline: "var(--red-dim)",
+};
+
+function EventDetail({ event, onBack }) {
+  if (!event) return null;
+
+  const typeColor = EVENT_TYPE_COLORS[event.type] || "var(--text-muted)";
+  const typeDim = EVENT_TYPE_DIM[event.type] || "rgba(255,255,255,0.06)";
+  const typeLabel = EVENT_TYPE_LABELS[event.type] || event.type;
+
+  return (
+    <div className="detail-view">
+      <button className="detail-back" onClick={onBack}>
+        {Icons.back} Back
+      </button>
+      <div className="detail-card">
+        {/* Header */}
+        <div className="detail-header">
+          <div>
+            <div className="detail-name">{event.title}</div>
+            <div className="detail-org">{formatDate(event.date)} at {event.time}</div>
+          </div>
+          <span className={`event-type-badge event-type-${event.type}`} style={{ fontSize: 11, padding: "4px 10px" }}>
+            {typeLabel}
+          </span>
+        </div>
+
+        {/* Type icon + label row */}
+        <div className="event-detail-type">
+          <div className="event-detail-icon" style={{ background: typeDim }}>
+            <span style={{ color: typeColor }}>{Icons.calendar}</span>
+          </div>
+          <div>
+            <label>Event Type</label>
+            <div style={{ fontSize: 14, color: typeColor, fontWeight: 600, marginTop: 2 }}>{typeLabel}</div>
+          </div>
+        </div>
+
+        {/* Date / time grid */}
+        <div className="detail-grid" style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "1px solid var(--border)" }}>
+          <div className="detail-field">
+            <label>Date</label>
+            <span>{formatDate(event.date)}</span>
+          </div>
+          <div className="detail-field">
+            <label>Time</label>
+            <span>{event.time}</span>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="detail-message" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
+          <label>Details</label>
+          <p>{event.description}</p>
+        </div>
+
+        {/* Calendar export */}
+        <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid var(--border)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--text-muted)", marginBottom: 10 }}>
+            Add to Calendar
+          </div>
+          <div className="day-popup-actions">
+            <a
+              href={buildGCalUrl(event.title, event.date, event.time, event.description || "")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-gcal"
+            >
+              {Icons.externalLink} Google Calendar
+            </a>
+            <button
+              className="btn-ics"
+              onClick={() => downloadICS(event.title, event.date, event.time, event.description || "")}
+            >
+              {Icons.download} Download .ics
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Login Screen ───
+function LoginScreen({ onLogin }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!username || !password) {
+      setError("Please enter username and password.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await api.login(username, password);
+      onLogin();
+    } catch (err) {
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-box">
+        <div className="login-logo">
+          <h1>Armvet</h1>
+          <p>Admin Portal</p>
+        </div>
+        <div className="login-card">
+          <h2>Sign In</h2>
+          <p className="subtitle">Access your consultation management dashboard</p>
+          {error && <div className="login-error">{error}</div>}
+          <div className="form-group">
+            <label>Username</label>
+            <input type="text" placeholder="Enter username" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input type="password" placeholder="Enter password" value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} onKeyDown={(e) => e.key === "Enter" && handleSubmit()} />
+          </div>
+          <button className="btn-primary" onClick={handleSubmit} disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ───
+export default function ArmvetDashboard() {
+  const [loggedIn, setLoggedIn] = useState(api.isAuthenticated());
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState("dashboard");
+  const [bookings, setBookings] = useState([]);
+  const [contacts, setContacts] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [selectedBookingId, setSelectedBooking] = useState(null);
+  const [selectedContactId, setSelectedContact] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(null);
+  const [eventReturnPage, setEventReturnPage] = useState("dashboard");
+  const [toasts, setToasts] = useState([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [contactSearchTerm, setContactSearchTerm] = useState("");
+  const [contactStatusFilter, setContactStatusFilter] = useState("all");
+
+  const addToast = ({ message, type = "success", eventId = null, bookingId = null }) => {
+    const id = Date.now();
+    setToasts((t) => [...t, { id, message, type, eventId, bookingId }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 5000);
+  };
+
+  const navigateToEvent = (eventId, returnPage = "dashboard") => {
+    setSelectedEventId(eventId);
+    setEventReturnPage(returnPage);
+    setPage("event-detail");
+  };
+
+  const navigateToBooking = (bookingId) => {
+    setSelectedBooking(bookingId);
+    setPage("booking-detail");
+  };
+
+  // Verify token on mount
+  useEffect(() => {
+    if (api.isAuthenticated()) {
+      api.verifyToken().then((valid) => {
+        setLoggedIn(valid);
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch data from API when logged in
+  const loadData = useCallback(async () => {
+    if (!loggedIn) return;
+    try {
+      const [bookingsData, contactsData, eventsData] = await Promise.all([
+        api.fetchBookings(),
+        api.fetchContacts(),
+        api.fetchEvents(),
+      ]);
+      setBookings(bookingsData);
+      setContacts(contactsData);
+      setEvents(eventsData);
+    } catch (err) {
+      console.error("Failed to load data:", err);
+      addToast({ message: "Failed to load data from server", type: "error" });
+    }
+  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Fire reminder toasts on data load
+  useEffect(() => {
+    if (!loggedIn || events.length === 0) return;
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+    const todayEvs = events.filter((e) => e.date === todayStr || (e.date && e.date.startsWith(todayStr)));
+    const tomorrowEvs = events.filter((e) => e.date === tomorrowStr || (e.date && e.date.startsWith(tomorrowStr)));
+    if (todayEvs.length > 0) {
+      setTimeout(() => addToast({
+        message: `Today at ${todayEvs[0].time}: ${todayEvs[0].title}`,
+        type: "info",
+        eventId: todayEvs[0].id,
+      }), 700);
+    }
+    if (tomorrowEvs.length > 0) {
+      setTimeout(() => addToast({
+        message: `Tomorrow at ${tomorrowEvs[0].time}: ${tomorrowEvs[0].title}`,
+        type: "info",
+        eventId: tomorrowEvs[0].id,
+      }), 1900);
+    }
+  }, [events, loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const updateBookingStatus = async (id, status) => {
+    try {
+      const updated = await api.updateBookingStatus(id, status);
+      setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    } catch (err) {
+      addToast({ message: "Failed to update booking status", type: "error" });
+    }
+  };
+
+  const addToCalendar = async (id) => {
+    try {
+      const updated = await api.updateBookingStatus(id, "on-calendar");
+      setBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+    } catch (err) {
+      addToast({ message: "Failed to add to calendar", type: "error" });
+    }
+  };
+
+  const updateContactStatus = async (id, status) => {
+    try {
+      const updated = await api.updateContactStatus(id, status);
+      setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
+    } catch (err) {
+      addToast({ message: "Failed to update contact status", type: "error" });
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setLoggedIn(false);
+    setBookings([]);
+    setContacts([]);
+    setEvents([]);
+  };
+
+  const selectedBooking = bookings.find((b) => b.id === selectedBookingId);
+  const selectedContact = contacts.find((c) => c.id === selectedContactId);
+
+  if (loading) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <div className="login-page"><div className="login-box"><div className="login-logo"><h1>Armvet</h1><p>Loading...</p></div></div></div>
+      </>
+    );
+  }
+
+  if (!loggedIn) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <LoginScreen onLogin={() => { setLoggedIn(true); }} />
+      </>
+    );
+  }
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+
+  let content;
+  if (page === "dashboard") {
+    content = <DashboardPage bookings={bookings} contacts={contacts} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} setSelectedContact={setSelectedContact} onEventClick={(id) => navigateToEvent(id, "dashboard")} />;
+  } else if (page === "bookings") {
+    content = <BookingsPage bookings={bookings} setPage={setPage} setSelectedBooking={setSelectedBooking} searchTerm={searchTerm} setSearchTerm={setSearchTerm} statusFilter={statusFilter} setStatusFilter={setStatusFilter} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} />;
+  } else if (page === "booking-detail") {
+    content = <BookingDetail booking={selectedBooking} onBack={() => setPage("bookings")} onUpdateStatus={updateBookingStatus} onAddToCalendar={addToCalendar} addToast={addToast} />;
+  } else if (page === "contacts") {
+    content = <ContactsPage contacts={contacts} setPage={setPage} setSelectedContact={setSelectedContact} searchTerm={contactSearchTerm} setSearchTerm={setContactSearchTerm} contactStatusFilter={contactStatusFilter} setContactStatusFilter={setContactStatusFilter} />;
+  } else if (page === "contact-detail") {
+    content = <ContactDetail contact={selectedContact} onBack={() => setPage("contacts")} onUpdateStatus={updateContactStatus} addToast={addToast} />;
+  } else if (page === "calendar") {
+    content = <CalendarPage bookings={bookings} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} onEventClick={(id) => navigateToEvent(id, "calendar")} />;
+  } else if (page === "event-detail") {
+    content = <EventDetail event={selectedEvent} onBack={() => setPage(eventReturnPage)} />;
+  }
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <div className="app-layout">
+        <div className="mobile-header">
+          <h1>Armvet</h1>
+          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}>{Icons.menu}</button>
+        </div>
+        <Sidebar page={page} setPage={setPage} bookings={bookings} contacts={contacts} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onLogout={handleLogout} />
+        <main className="main-content">
+          {content}
+        </main>
+        <Toast
+          toasts={toasts}
+          onEventClick={(id) => navigateToEvent(id, page)}
+          onBookingClick={navigateToBooking}
+        />
+      </div>
+    </>
+  );
+}
