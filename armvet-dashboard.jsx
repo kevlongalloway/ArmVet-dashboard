@@ -365,7 +365,17 @@ const CSS = `
   --transition: 0.2s ease;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   font-family: 'DM Sans', sans-serif;
@@ -373,6 +383,17 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Prevent iOS Safari from zooming on input focus (requires font-size >= 16px) */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Prevent double-tap zoom delay on all interactive elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
 }
 
 .login-page {
@@ -468,7 +489,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-primary);
   font-family: 'DM Sans', sans-serif;
   transition: border-color var(--transition);
@@ -584,6 +605,7 @@ body {
 .app-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .sidebar {
@@ -597,6 +619,7 @@ body {
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
   z-index: 100;
   transition: transform 0.3s ease;
 }
@@ -648,6 +671,7 @@ body {
   transition: all var(--transition);
   border-left: 3px solid transparent;
   position: relative;
+  touch-action: manipulation;
 }
 
 .nav-item:hover {
@@ -700,6 +724,9 @@ body {
   margin-left: 240px;
   padding: 28px;
   min-height: 100vh;
+  min-height: 100dvh;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .mobile-header {
@@ -859,6 +886,7 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  touch-action: manipulation;
 }
 
 .list-card:hover {
@@ -1085,11 +1113,12 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text-primary);
   font-family: 'DM Sans', sans-serif;
   outline: none;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .detail-status-select select:focus {
@@ -1168,6 +1197,15 @@ body {
 .cal-event.approved {
   background: var(--green-dim);
   color: var(--green);
+}
+
+.cal-event.event-entry {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.cal-event.event-entry:hover {
+  background: rgba(96, 165, 250, 0.2);
 }
 
 .cal-nav {
@@ -1283,7 +1321,7 @@ body {
   border: none;
   outline: none;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
 }
 
@@ -2215,7 +2253,7 @@ function ContactDetail({ contact, onBack, onUpdateStatus, addToast }) {
   );
 }
 
-function CalendarPage({ bookings, setPage, setSelectedBooking }) {
+function CalendarPage({ bookings, events, setPage, setSelectedBooking }) {
   const [monthOffset, setMonthOffset] = useState(0);
   const today = new Date(2026, 2, 17); // March 17, 2026
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -2228,46 +2266,57 @@ function CalendarPage({ bookings, setPage, setSelectedBooking }) {
   const daysInPrev = new Date(year, month, 0).getDate();
 
   const cells = [];
-  for (let i = firstDay - 1; i >= 0; i--) {
-    cells.push({ day: daysInPrev - i, otherMonth: true });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, otherMonth: false });
-  }
+  for (let i = firstDay - 1; i >= 0; i--) cells.push({ day: daysInPrev - i, otherMonth: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, otherMonth: false });
   const remaining = 42 - cells.length;
-  for (let i = 1; i <= remaining; i++) {
-    cells.push({ day: i, otherMonth: true });
-  }
+  for (let i = 1; i <= remaining; i++) cells.push({ day: i, otherMonth: true });
 
   const calBookings = bookings.filter((b) => b.status === "approved" || b.status === "on-calendar");
 
-  function eventsForDay(day) {
+  // Returns mixed array of bookings + standalone events for a given day
+  function entriesForDay(day) {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    return calBookings.filter((b) => b.date === dateStr);
+    const dayBookings = calBookings
+      .filter((b) => b.date === dateStr)
+      .map((b) => ({ ...b, _kind: "booking" }));
+    const dayEvents = events
+      .filter((e) => e.date === dateStr)
+      .map((e) => ({ ...e, _kind: "event" }));
+    return [...dayBookings, ...dayEvents];
   }
 
-  const isToday = (day) => !day.otherMonth && day.day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+  const isToday = (cell) =>
+    !cell.otherMonth && cell.day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
-  // Mobile: list of upcoming events
-  const upcoming = calBookings
-    .filter((b) => new Date(b.date + "T00:00:00") >= new Date(today.toDateString()))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  // Mobile upcoming list — bookings + standalone events merged and sorted
+  const todayDate = today.toDateString();
+  const upcomingBookings = calBookings
+    .filter((b) => new Date(b.date + "T00:00:00") >= new Date(todayDate))
+    .map((b) => ({ ...b, _kind: "booking", sortKey: b.date + b.time }));
+  const upcomingEvents = events
+    .filter((e) => new Date(e.date + "T00:00:00") >= new Date(todayDate))
+    .map((e) => ({ ...e, _kind: "event", name: e.title, sortKey: e.date + e.time }));
+  const upcoming = [...upcomingBookings, ...upcomingEvents].sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
   return (
     <div>
       <div className="page-header">
         <h2>Calendar</h2>
-        <p>View approved consultations and scheduled appointments</p>
+        <p>Approved consultations and scheduled events</p>
       </div>
 
       <div className="cal-legend">
         <div className="cal-legend-item">
-          <div className="cal-legend-dot" style={{ background: "var(--accent)" }} />
-          Approved
+          <div className="cal-legend-dot" style={{ background: "var(--green)" }} />
+          Approved booking
         </div>
         <div className="cal-legend-item">
           <div className="cal-legend-dot" style={{ background: "var(--purple)" }} />
           On Calendar
+        </div>
+        <div className="cal-legend-item">
+          <div className="cal-legend-dot" style={{ background: "var(--blue)" }} />
+          Event
         </div>
       </div>
 
@@ -2285,21 +2334,37 @@ function CalendarPage({ bookings, setPage, setSelectedBooking }) {
           <div key={d} className="cal-header-cell">{d}</div>
         ))}
         {cells.map((cell, i) => {
-          const events = cell.otherMonth ? [] : eventsForDay(cell.day);
+          const entries = cell.otherMonth ? [] : entriesForDay(cell.day);
           return (
             <div key={i} className={`cal-cell ${cell.otherMonth ? "other-month" : ""} ${isToday(cell) ? "today" : ""}`}>
               <div className="cal-day-num">{cell.day}</div>
-              {events.map((ev) => (
-                <div
-                  key={ev.id}
-                  className={`cal-event ${ev.status === "on-calendar" ? "" : "approved"}`}
-                  style={ev.status === "on-calendar" ? { background: "var(--purple-dim)", color: "var(--purple)" } : {}}
-                  onClick={() => { setSelectedBooking(ev.id); setPage("booking-detail"); }}
-                  title={`${ev.name} — ${ev.service}`}
-                >
-                  {ev.time} {ev.name.split(" ")[1] || ev.name}
-                </div>
-              ))}
+              {entries.map((entry) => {
+                if (entry._kind === "event") {
+                  return (
+                    <div
+                      key={entry.id}
+                      className="cal-event event-entry"
+                      title={`${entry.title} at ${entry.time}`}
+                    >
+                      {entry.time} {entry.title.split(" ")[0]}
+                    </div>
+                  );
+                }
+                // booking
+                const cls = entry.status === "on-calendar" ? "" : "approved";
+                const style = entry.status === "on-calendar" ? { background: "var(--purple-dim)", color: "var(--purple)" } : {};
+                return (
+                  <div
+                    key={entry.id}
+                    className={`cal-event ${cls}`}
+                    style={style}
+                    onClick={() => { setSelectedBooking(entry.id); setPage("booking-detail"); }}
+                    title={`${entry.name} — ${entry.service}`}
+                  >
+                    {entry.time} {entry.name.split(" ")[1] || entry.name}
+                  </div>
+                );
+              })}
             </div>
           );
         })}
@@ -2307,25 +2372,41 @@ function CalendarPage({ bookings, setPage, setSelectedBooking }) {
 
       {/* Mobile list fallback */}
       <div className="cal-mobile-list" style={{ display: "none" }}>
-        <div className="section-title" style={{ marginBottom: 12 }}>Upcoming Consultations</div>
+        <div className="section-title" style={{ marginBottom: 12 }}>Upcoming</div>
         {upcoming.length === 0 ? (
-          <div className="empty-state"><p>No upcoming approved consultations.</p></div>
+          <div className="empty-state"><p>No upcoming events or consultations.</p></div>
         ) : (
           <div className="card-list">
-            {upcoming.map((b) => (
-              <div key={b.id} className="list-card" onClick={() => { setSelectedBooking(b.id); setPage("booking-detail"); }}>
-                <div className="card-status-dot" style={{ background: b.status === "on-calendar" ? "var(--purple)" : "var(--green)" }} />
+            {upcoming.map((item) => (
+              <div
+                key={item.id}
+                className="list-card"
+                onClick={item._kind === "booking" ? () => { setSelectedBooking(item.id); setPage("booking-detail"); } : undefined}
+                style={item._kind === "event" ? { cursor: "default" } : {}}
+              >
+                <div className="card-status-dot" style={{
+                  background: item._kind === "event" ? "var(--blue)"
+                    : item.status === "on-calendar" ? "var(--purple)" : "var(--green)"
+                }} />
                 <div className="card-body">
                   <div className="card-top-row">
-                    <span className="card-name">{b.name}</span>
-                    <span className="card-date">{b.time}</span>
+                    <span className="card-name">{item.name}</span>
+                    <span className="card-date">{item.time}</span>
                   </div>
-                  <div className="card-preview">{b.service} — {formatDate(b.date)}</div>
+                  <div className="card-preview">
+                    {item._kind === "booking" ? `${item.service} — ` : ""}{formatDate(item.date)}
+                  </div>
                   <div className="card-tags">
-                    <span className={`status-badge status-${b.status}`}>{b.status === "on-calendar" ? "On Calendar" : "Approved"}</span>
+                    {item._kind === "booking" ? (
+                      <span className={`status-badge status-${item.status}`}>
+                        {item.status === "on-calendar" ? "On Calendar" : "Approved"}
+                      </span>
+                    ) : (
+                      <span className={`event-type-badge event-type-${item.type}`}>{item.type}</span>
+                    )}
                   </div>
                 </div>
-                <span className="card-chevron">{Icons.chevronRight}</span>
+                {item._kind === "booking" && <span className="card-chevron">{Icons.chevronRight}</span>}
               </div>
             ))}
           </div>
@@ -2454,7 +2535,7 @@ export default function ArmvetDashboard() {
   } else if (page === "contact-detail") {
     content = <ContactDetail contact={selectedContact} onBack={() => setPage("contacts")} onUpdateStatus={updateContactStatus} addToast={addToast} />;
   } else if (page === "calendar") {
-    content = <CalendarPage bookings={bookings} setPage={setPage} setSelectedBooking={setSelectedBooking} />;
+    content = <CalendarPage bookings={bookings} events={events} setPage={setPage} setSelectedBooking={setSelectedBooking} />;
   }
 
   return (
