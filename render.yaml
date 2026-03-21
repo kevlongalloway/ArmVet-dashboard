@@ -25,4 +25,4 @@ services:
 
 databases:
   - name: armvet-postgres
-    plan: basic
+
