@@ -80,9 +80,10 @@ app.get('/api/stats', authenticateToken, (req, res) => {
   }
 });
 
-// Serve static frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.join(__dirname, '..', 'dist');
+// Serve static frontend
+const fs = require('fs');
+const distPath = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.includes('.')) {
