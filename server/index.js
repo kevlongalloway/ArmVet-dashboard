@@ -141,7 +141,7 @@ async function start() {
       console.log(`Allowed CORS origins: ${allowedOrigins.join(', ')}`);
     });
   } catch (err) {
-    console.error('Failed to start server:', err.message);
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
 }
