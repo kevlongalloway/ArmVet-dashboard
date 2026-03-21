@@ -2978,6 +2978,7 @@ function LoginScreen({ onLogin }) {
 export default function ArmvetDashboard() {
   const [loggedIn, setLoggedIn] = useState(api.isAuthenticated());
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState(null);
   const [page, setPage] = useState("dashboard");
   const [bookings, setBookings] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -3016,10 +3017,16 @@ export default function ArmvetDashboard() {
   // Verify token on mount
   useEffect(() => {
     if (api.isAuthenticated()) {
-      api.verifyToken().then((valid) => {
-        setLoggedIn(valid);
-        setLoading(false);
-      });
+      api.verifyToken()
+        .then((valid) => {
+          setLoggedIn(valid);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error('[ArmvetDashboard] Token verification failed:', err);
+          setInitError(err);
+          setLoading(false);
+        });
     } else {
       setLoading(false);
     }
@@ -3116,6 +3123,41 @@ export default function ArmvetDashboard() {
       <>
         <style>{CSS}</style>
         <div className="login-page"><div className="login-box"><div className="login-logo"><h1>Armvet</h1><p>Loading...</p></div></div></div>
+      </>
+    );
+  }
+
+  if (initError) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <div className="login-page">
+          <div className="login-box">
+            <div className="login-logo">
+              <h1>Armvet</h1>
+              <p style={{ color: '#e05252', marginTop: '0.5rem' }}>Initialization error</p>
+            </div>
+            <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1rem', textAlign: 'center' }}>
+              The app failed to start. Check the browser console for details.
+            </p>
+            <pre style={{
+              background: '#1a1d24',
+              color: '#e05252',
+              padding: '0.75rem',
+              borderRadius: '4px',
+              fontSize: '0.8rem',
+              overflowX: 'auto',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              marginBottom: '1rem',
+            }}>
+              {initError.toString()}
+            </pre>
+            <button className="login-btn" onClick={() => window.location.reload()}>
+              Reload
+            </button>
+          </div>
+        </div>
       </>
     );
   }
