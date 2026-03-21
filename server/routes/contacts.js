@@ -1,55 +1,34 @@
 const express = require('express');
-const { pool } = require('../db');
+const { contacts } = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/contacts - List all contacts (auth required)
-router.get('/', authenticateToken, async (req, res) => {
+// GET /api/contacts
+router.get('/', authenticateToken, (req, res) => {
   try {
     const { status, search } = req.query;
-    let query = 'SELECT * FROM contacts';
-    const conditions = [];
-    const params = [];
-
-    if (status && status !== 'all') {
-      params.push(status);
-      conditions.push(`status = $${params.length}`);
-    }
-    if (search) {
-      params.push(`%${search}%`);
-      conditions.push(`(name ILIKE $${params.length} OR subject ILIKE $${params.length})`);
-    }
-
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-    query += ' ORDER BY submitted_at DESC';
-
-    const result = await pool.query(query, params);
-    res.json(result.rows);
+    res.json(contacts.list({ status, search }));
   } catch (err) {
     console.error('Error fetching contacts:', err.message);
     res.status(500).json({ error: 'Failed to fetch contacts' });
   }
 });
 
-// GET /api/contacts/:id - Get single contact (auth required)
-router.get('/:id', authenticateToken, async (req, res) => {
+// GET /api/contacts/:id
+router.get('/:id', authenticateToken, (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM contacts WHERE id = $1', [req.params.id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Contact not found' });
-    }
-    res.json(result.rows[0]);
+    const row = contacts.get(req.params.id);
+    if (!row) return res.status(404).json({ error: 'Contact not found' });
+    res.json(row);
   } catch (err) {
     console.error('Error fetching contact:', err.message);
     res.status(500).json({ error: 'Failed to fetch contact' });
   }
 });
 
-// PATCH /api/contacts/:id/status - Update contact status (auth required)
-router.patch('/:id/status', authenticateToken, async (req, res) => {
+// PATCH /api/contacts/:id/status
+router.patch('/:id/status', authenticateToken, (req, res) => {
   const { status } = req.body;
   const validStatuses = ['new', 'replied', 'archived'];
 
@@ -58,27 +37,20 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
   }
 
   try {
-    const result = await pool.query(
-      'UPDATE contacts SET status = $1 WHERE id = $2 RETURNING *',
-      [status, req.params.id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Contact not found' });
-    }
-    res.json(result.rows[0]);
+    const row = contacts.updateStatus(req.params.id, status);
+    if (!row) return res.status(404).json({ error: 'Contact not found' });
+    res.json(row);
   } catch (err) {
     console.error('Error updating contact:', err.message);
     res.status(500).json({ error: 'Failed to update contact' });
   }
 });
 
-// DELETE /api/contacts/:id - Delete contact (auth required)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// DELETE /api/contacts/:id
+router.delete('/:id', authenticateToken, (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM contacts WHERE id = $1 RETURNING id', [req.params.id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Contact not found' });
-    }
+    const deleted = contacts.delete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Contact not found' });
     res.json({ message: 'Contact deleted' });
   } catch (err) {
     console.error('Error deleting contact:', err.message);

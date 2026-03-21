@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || 'armvet-secret-key';
 
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];

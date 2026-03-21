@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { pool } = require('../db');
+const { users } = require('../db');
 const { generateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -14,12 +14,11 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
-    if (result.rows.length === 0) {
+    const user = users.findByUsername(username);
+    if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const user = result.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -44,7 +43,7 @@ router.post('/verify', (req, res) => {
 
   try {
     const jwt = require('jsonwebtoken');
-    jwt.verify(token, process.env.JWT_SECRET || 'change-me-in-production');
+    jwt.verify(token, process.env.JWT_SECRET || 'armvet-secret-key');
     res.json({ valid: true });
   } catch {
     res.status(401).json({ valid: false });
