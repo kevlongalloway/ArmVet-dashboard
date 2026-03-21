@@ -1,5 +1,18 @@
 require('dotenv').config();
 
+// Validate required environment variables before anything else
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD'];
+const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+  console.error('=== MISSING REQUIRED ENVIRONMENT VARIABLES ===');
+  missing.forEach((k) => console.error(`  ✗ ${k}`));
+  console.error('');
+  console.error('On Render: set these under your service → Environment tab.');
+  console.error('Locally:   copy .env.example to .env and fill in the values.');
+  console.error('==============================================');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
